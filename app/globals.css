@@ -1,0 +1,28 @@
+@import url("https://cdn.fontcdn.ir/Font/Persian/Yekan/Yekan.css");
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  margin: 0;
+  padding: 3rem 2rem;
+  background-color: #ffffff;
+  color: #222222;
+  font-family: "Yekan", sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  text-align: right;
+}
+
+h1 {
+  margin: 0 0 1rem;
+}
+
+p {
+  margin: 0;
+}
