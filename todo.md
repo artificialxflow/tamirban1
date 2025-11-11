@@ -10,43 +10,48 @@
 - [ ] هماهنگی با هاست سی‌پنل برای اجرای برنامه Node.js روی پورت 3124 و دسترسی به SSH/FTP
 
 ## فاز 1 — راه‌اندازی پروژه Next.js (Tailwind + TypeScript)
-- [ ] ساخت مخزن جدید و اجرای `npx create-next-app@latest tamirban --ts --tailwind`
-- [ ] پاک‌سازی نمونه‌ها و تعریف ساختار پوشه‌ها (`app/`, `lib/`, `modules/`, `postman/`, `public/`, `docs/`)
-- [ ] افزودن فونت «ایران یکان» در `public/fonts` و تعریف آن در `tailwind.config.ts`
-- [ ] تنظیم زبان فارسی و RTL در `app/layout.tsx` و `app/globals.css`
-- [ ] پیکربندی Theme پایه (رنگ‌ها، سایه‌ها، spacing) با Tailwind
+- [x] ساخت مخزن جدید و اجرای `npx create-next-app@latest tamirban --ts --tailwind`
+- [x] پاک‌سازی نمونه‌ها و تعریف ساختار پوشه‌ها (`app/`, `lib/`, `modules/`, `postman/`, `public/`, `docs/`)
+- [x] افزودن فونت «ایران یکان» در `public/fonts` و تعریف آن در `tailwind.config.ts`
+- [x] تنظیم زبان فارسی و RTL در `app/layout.tsx` و `app/globals.css`
+- [x] پیکربندی Theme پایه (رنگ‌ها، سایه‌ها، spacing) با Tailwind
 - [ ] راه‌اندازی ESLint/Prettier و فعال‌سازی TypeScript strict mode
-- [ ] ایجاد `postman/README.md` برای آماده‌سازی کالکشن‌ها و مستندات API
+- [x] ایجاد `postman/README.md` برای آماده‌سازی کالکشن‌ها و مستندات API
 
 ## فاز 2 — تنظیمات محیطی و استقرار سی‌پنل
-- [ ] ایجاد `.env.example` با متغیرهای پایه (PORT=3124، NEXT_PUBLIC_SITE_URL، MONGODB_URI، SMS Provider)
-- [ ] پیاده‌سازی `server.js` برای اجرای Next.js روی پورت 3124 با `next start`
-- [ ] افزودن اسکریپت `start:server` به `package.json`
-- [ ] تست اجرای محلی با `node server.js`
-- [ ] نوشتن راهنمای استقرار در `docs/deployment-cpanel.md`
+- [x] ایجاد `.env.example` با متغیرهای پایه (PORT=3124، NEXT_PUBLIC_SITE_URL، MONGODB_URI، SMS Provider)
+- [x] پیاده‌سازی `server.js` برای اجرای Next.js روی پورت 3124 با `next start`
+- [x] افزودن اسکریپت `start:server` به `package.json`
+- [x] تست اجرای محلی با `node server.js`
+- [x] نوشتن راهنمای استقرار در `docs/deployment-cpanel.md`
 
 ## فاز 3 — طراحی UI پایه با تایید مرحله‌ای
-- [ ] طراحی Layout اصلی (Header، Sidebar، Main) و نمایش به کارفرما برای تایید
-- [ ] تنظیم تایپوگرافی و مقیاس فونت‌ها (فونت ایران یکان) و تایید
-- [ ] پیاده‌سازی UI صفحه ورود/OTP (بدون بک‌اند) و دریافت تایید
-- [ ] پیاده‌سازی UI صفحه داشبورد (بدون داده واقعی) و دریافت تایید
-- [ ] طراحی UI صفحات Customers، Marketers، Visits، Invoices، Settings (UI-only) و تایید تک‌به‌تک
+- [x] طراحی Layout اصلی (Header، Sidebar، Main) و نمایش به کارفرما برای تایید
+- [x] تنظیم تایپوگرافی و مقیاس فونت‌ها (فونت ایران یکان) و تایید
+- [x] پیاده‌سازی UI صفحه ورود/OTP (بدون بک‌اند) و دریافت تایید
+- [x] پیاده‌سازی UI صفحه داشبورد (بدون داده واقعی) و دریافت تایید
+- [x] طراحی UI صفحات Customers، Marketers، Visits، Invoices، Settings (UI-only) و تایید تک‌به‌تک
+  - [x] Customers: لیست، فیلتر و پنل جزئیات
+  - [x] Marketers: لیست بازاریاب‌ها و کارت‌های وضعیت
+  - [x] Visits: نقشه و جدول برنامه روزانه
+  - [x] Invoices: جدول و پیش‌نمایش PDF
+  - [x] Settings: تب‌بندی تنظیمات دسترسی و اعلان‌ها
 - [ ] ساخت کتابخانه کامپوننت‌ها (Buttons، Inputs، Cards، Tables، Tabs، Modals)
 - [ ] تست ریسپانسیو و RTL در هر مرحله پیش از اتصال به داده
 
 ## فاز 4 — مدل داده و اتصال MongoDB
-- [ ] تعریف Types/Interfaces برای User، Contact، Visit، Product، Invoice، SMSLog
-- [ ] راه‌اندازی اتصال به MongoDB با URI پروژه و تست سلامت اتصال
-- [ ] ایجاد لایه Repository/Service برای عملیات CRUD و فیلترها
+- [x] تعریف Types/Interfaces برای User، Contact، Visit، Product، Invoice، SMSLog
+- [x] راه‌اندازی اتصال به MongoDB با URI پروژه و تست سلامت اتصال
+- [x] ایجاد لایه Repository/Service برای عملیات CRUD و فیلترها
 - [ ] نوشتن تست‌های واحد برای سرویس‌ها (Jest یا Vitest)
-- [ ] مستندسازی ساختار داده در `docs/data-model.md`
+- [x] مستندسازی ساختار داده در `docs/data-model.md`
 
 ## فاز 5 — احراز هویت و مدیریت نقش‌ها
 - [ ] پیاده‌سازی احراز هویت با شماره موبایل و OTP (حالت تست: کد ثابت بدون SMS واقعی)
 - [ ] ادغام سرویس پیامکی برای ارسال OTP واقعی (پس از آماده شدن سرویس)
 - [ ] هش کردن OTPها و رمزهای یک‌بارمصرف با `bcrypt`
 - [ ] صدور و مدیریت توکن‌های دسترسی/تازه‌سازی با `JWT`
-- [ ] مستندسازی گزینه جایگزین (NextAuth Credentials) و دلیل انتخاب رویکرد JWT
+- [x] مستندسازی گزینه جایگزین (NextAuth Credentials) و دلیل انتخاب رویکرد JWT
 - [ ] صفحه مدیریت کاربران: ایجاد دستی بازاریاب، فعال/غیرفعال، تعیین نقش و دسترسی اختصاصی
 - [ ] پیاده‌سازی Role-Based Access Control در سطح API و UI
 - [ ] ثبت لاگ ورود/خروج و رویدادهای امنیتی
@@ -111,5 +116,46 @@
 - [ ] نگهداری CHANGELOG برای نسخه‌های مهم
 - [ ] دیدار/جلسه دوره‌ای با کارفرما جهت تایید UI و عملکرد
 - [ ] آماده‌سازی چک‌لیست تحویل نهایی برای اطمینان از پوشش همه موارد
+
+## رفع فوری — احیای استایل Tailwind
+- [x] تصمیم نهایی در مورد مسیر مهاجرت Tailwind (بازگشت به v3 یا تکمیل v4)
+- [x] به‌روزرسانی وابستگی‌ها و پیکربندی مطابق مسیر انتخاب‌شده
+  - [ ] بازگشت به v3: حذف بسته‌های نسخه ۴، نصب `tailwindcss@^3`, `autoprefixer` و تنظیم مجدد `postcss.config`/`tailwind.config`
+  - [x] تکمیل مهاجرت v4: نصب `@tailwindcss/cli`, به‌روزرسانی ورودی CSS (`@import "tailwindcss"`)، تنظیم اسکریپت‌های build/dev و اطمینان از اجرای CLI
+- [x] اجرای `next build` یا `next dev` و بررسی خروجی CSS برای وجود utilityها (نمونه: `bg-white`, `rounded-3xl`)
+- [x] تست دستی صفحات داشبورد و احراز هویت برای تایید بازگشت استایل‌ها
+
+## وظایف فوری — تست اتصال دیتابیس و ورود OTP
+- [x] اطمینان از مقداردهی متغیرهای محیطی (`MONGODB_URI`, `MONGODB_DB_NAME`, `JWT_SECRET`) در `.env.local`
+- [x] پیاده‌سازی سرویس OTP ساده با `bcrypt` برای ذخیره کدهای یکبارمصرف و محدودیت تلاش‌ها
+- [x] ایجاد API برای درخواست OTP و تأیید آن (ثبت کاربر در MongoDB در صورت نبود)
+- [x] تولید و بازگرداندن JWT پس از تایید کد `0000` و ذخیره نشست در دیتابیس
+- [x] سنجش اتصال با این سناریو: ثبت شماره آزمایشی، ارسال کد ثابت `0000`, دریافت پاسخ موفق از API و ورود از طریق فرانت‌اند
+- [x] مستندسازی مراحل تست و ابزارهای Postman جهت استفاده مجدد
+
+## فاز بعدی — داینامیک کردن داده‌های اپلیکیشن
+- [ ] همگام‌سازی مدل‌های Domain با طرح نهایی دیتابیس (شناسه‌ها، فیلدها، ایندکس‌ها، روابط)
+- [ ] طراحی Seed اولیه برای هر کالکشن (Customers, Marketers, Visits, Invoices, SMSLogs)
+- [ ] ساخت Repository/Serviceهای کامل با اعتبارسنجی ورودی و هندلینگ خطا
+  - [x] Customers: CRUD، فیلتر/جستجو، تخصیص بازاریاب، تاریخچه تعامل
+  - [ ] Marketers: CRUD، مدیریت نقش و وضعیت فعالیت، آمار عملکرد
+  - [ ] Visits: برنامه‌ریزی، تغییر وضعیت، ثبت یادداشت و مختصات
+  - [ ] Invoices: ایجاد و محاسبه جمع، تغییر وضعیت پرداخت، تولید PDF
+  - [ ] Dashboard/Reports: محاسبه KPI و خروجی تجمیعی از داده‌ها
+- [ ] طراحی API RESTful (Next Route Handlers) برای هر ماژول با 6 احراز هویت و Validation
+  - [ ] Auth: ورود OTP، Refresh Token، خروج، محافظت از مسیرها
+  - [x] Customers, Marketers, Visits, Invoices, Reports endpoints
+  - [ ] Middleware برای JWT و Role-Based Access Control
+- [ ] اتصال UI به داده‌های واقعی
+  - [ ] تبدیل صفحه داشبورد به RSC/SSR با داده KPI و لیست‌ها
+  - [x] فرم‌های Customers و Visits برای ایجاد/ویرایش با واکنش به خطا
+  - [x] جدول‌ها و کارت‌ها با Pagination، فیلتر و Loading states
+  - [ ] صفحه Invoices با جدول داینامیک و نمایش پیش‌نمایش PDF
+  - [ ] پنل Settings و Reports با داده بک‌اند
+- [ ] مدیریت نشست کاربر در فرانت‌اند (ذخیره JWT/Refresh، زمان‌بندی تمدید، خروج امن)
+- [ ] پیاده‌سازی لاگ رویداد و رصد خطا (MongoDB یا ابزار بیرونی)
+- [ ] نوشتن تست‌های واحد/Integration برای سرویس‌ها و API + سناریوی E2E حیاتی
+- [ ] به‌روزرسانی مستندات Postman، README و `docs/` پس از هر ماژول
+- [ ] تهیه اسکریپت راه‌اندازی (Seed/Import) و دستورالعمل استقرار داده واقعی
 
 

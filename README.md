@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## TamirBan CRM Starter
 
-## Getting Started
+این مخزن نقطهٔ شروع توسعه وب‌اپ تعمیربان است؛ همهٔ فازهای پروژه بر اساس مستندات `explaination.md` و `todo.md` در اینجا پیاده‌سازی می‌شوند.
 
-First, run the development server:
+### پشتهٔ فعلی
+- Next.js (App Router + TypeScript)
+- Tailwind CSS با تنظیمات RTL و فونت ایران یکان
+- ESLint با پیکربندی Core Web Vitals
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### شروع توسعه
+1. وابستگی‌ها را نصب کنید:
+   ```bash
+   npm install
+   ```
+2. سرور توسعه را اجرا کنید:
+   ```bash
+   npm run dev
+   ```
+3. اپلیکیشن روی آدرس `http://localhost:3000` در دسترس است.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ساختار پوشه‌ها
+- `app/` صفحات و layout اصلی
+- `lib/` توابع و utilهای اشتراکی
+- `modules/` ماژول‌های دامنه (Auth, CRM و ...)
+- `docs/` مستندات تکمیلی (deployment، architecture و ...)
+- `postman/` کالکشن و محیط‌های Postman
+- `public/fonts/` فایل‌های فونت ایران یکان (اضافه کنید: `IRANYekan-Regular.woff2` و `IRANYekan-SemiBold.woff2`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### فونت
+برای نمایش صحیح تایپوگرافی، فونت‌های ایران یکان را در مسیر `public/fonts/iranyekan/` با نام‌های زیر قرار دهید:
+- `IRANYekan-Regular.woff2`
+- `IRANYekan-SemiBold.woff2`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+در محیط توسعه می‌توانید موقتاً از CDN یا فونت‌های جایگزین بهره ببرید؛ اما برای استقرار نهایی لازم است فایل‌های فونت واقعی استفاده شوند.
 
-## Learn More
+### اسکریپت‌ها
+- `npm run dev` اجرای محیط توسعه
+- `npm run build` ساخت خروجی production
+- `npm run start` اجرای خروجی production
+- `npm run lint` بررسی استانداردهای کد
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### مسیر بعدی
+پیش از شروع هر فاز، لیست وظایف `todo.md` را بررسی و به‌روزرسانی کنید. پس از تکمیل فاز 1، پیاده‌سازی ماژول احراز هویت و اتصال به MongoDB در فازهای بعدی ادامه خواهد داشت.
