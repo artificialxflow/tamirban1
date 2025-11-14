@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { OTPCard } from "@/components/auth/otp-card";
@@ -12,6 +13,7 @@ type MessageState = {
 };
 
 export default function AuthPreviewPage() {
+  const router = useRouter();
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [requestMessage, setRequestMessage] = useState<MessageState | null>(null);
@@ -30,6 +32,8 @@ export default function AuthPreviewPage() {
     setIsRequesting(true);
     setRequestMessage(null);
 
+    console.log("[Frontend] شروع درخواست OTP برای شماره:", normalizedPhone);
+
     try {
       const response = await fetch("/api/auth/otp/request", {
         method: "POST",
@@ -37,18 +41,32 @@ export default function AuthPreviewPage() {
         body: JSON.stringify({ phone: normalizedPhone }),
       });
 
+      console.log("[Frontend] وضعیت پاسخ:", response.status, response.statusText);
+
       const data = await response.json();
+      console.log("[Frontend] داده پاسخ:", data);
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message ?? "ارسال کد با خطا مواجه شد.");
+        const errorMsg = data.message ?? "ارسال کد با خطا مواجه شد.";
+        console.error("[Frontend] خطا در ارسال OTP:", errorMsg);
+        throw new Error(errorMsg);
       }
 
+      // اگر کد در پاسخ باشد (حالت تست بدون SMS)، نمایش می‌دهیم
+      // در غیر این صورت، فقط پیام موفقیت نمایش می‌دهیم
+      const messageText = data.code 
+        ? `کد با موفقیت ارسال شد. (کد تست: ${data.code})`
+        : "کد تایید به شماره موبایل شما ارسال شد. لطفاً پیامک را بررسی کنید.";
+      
+      console.log("[Frontend] پیام موفقیت:", messageText);
+      
       setRequestMessage({
         type: "success",
-        text: `کد با موفقیت ارسال شد. (کد تست: ${data.code})`,
+        text: messageText,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "ارسال کد ناموفق بود.";
+      console.error("[Frontend] خطا:", error);
       setRequestMessage({ type: "error", text: message });
     } finally {
       setIsRequesting(false);
@@ -82,7 +100,17 @@ export default function AuthPreviewPage() {
         throw new Error(data.message ?? "ورود ناموفق بود.");
       }
 
-      setVerifyMessage({ type: "success", text: "ورود موفق بود." });
+      // ذخیره توکن در localStorage (برای استفاده بعدی)
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      setVerifyMessage({ type: "success", text: "ورود موفق بود. در حال انتقال..." });
+      
+      // ریدایرکت به داشبورد بعد از 1 ثانیه
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "ورود ناموفق بود.";
       setVerifyMessage({ type: "error", text: message });
