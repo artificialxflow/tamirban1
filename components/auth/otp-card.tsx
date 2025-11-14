@@ -160,7 +160,7 @@ export function OTPCard({
           <>
             <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               کد تایید
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3" dir="ltr">
                 {digits.map((digit, index) => (
                   <input
                     key={`otp-digit-${index}`}
@@ -171,6 +171,7 @@ export function OTPCard({
                     inputMode="numeric"
                     value={digit}
                     maxLength={1}
+                    dir="ltr"
                     className="h-14 w-14 rounded-2xl border border-slate-200 text-center text-lg font-semibold text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                     onChange={handleDigitChange(index)}
                     onKeyDown={handleDigitKeyDown(index)}
