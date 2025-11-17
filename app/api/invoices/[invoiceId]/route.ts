@@ -5,7 +5,7 @@ import {
   updateInvoice,
   deleteInvoice,
 } from "@/lib/services/invoices.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 type RouteParams = {
@@ -15,9 +15,9 @@ type RouteParams = {
 };
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -58,9 +58,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:delete")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

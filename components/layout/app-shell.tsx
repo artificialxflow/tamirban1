@@ -6,22 +6,32 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/lib/hooks/use-auth";
+import { usePermissions } from "@/lib/hooks/use-permissions";
+import type { RoleKey } from "@/lib/types";
 
 type NavItem = {
   name: string;
   href: string;
   badge?: string;
+  /**
+   * نقش‌های مجاز برای مشاهده این منو
+   */
+  allowedRoles?: RoleKey[];
+  /**
+   * Permission مورد نیاز برای مشاهده این منو
+   */
+  requiredPermission?: string;
 };
 
-const NAV_ITEMS: NavItem[] = [
+const ALL_NAV_ITEMS: NavItem[] = [
   { name: "داشبورد", href: "/dashboard", badge: "جدید" },
   { name: "مشتریان", href: "/dashboard/customers", badge: "112" },
-  { name: "بازاریاب‌ها", href: "/dashboard/marketers", badge: "12" },
-  { name: "ویزیت‌ها", href: "/dashboard/visits" },
-  { name: "پیش‌فاکتورها", href: "/dashboard/invoices", badge: "5 جدید" },
+  { name: "بازاریاب‌ها", href: "/dashboard/marketers", badge: "12", requiredPermission: "marketers:read" },
+  { name: "ویزیت‌ها", href: "/dashboard/visits", requiredPermission: "visits:read" },
+  { name: "پیش‌فاکتورها", href: "/dashboard/invoices", badge: "5 جدید", requiredPermission: "invoices:read" },
   { name: "پیامک‌ها", href: "/dashboard/sms" },
-  { name: "گزارش‌ها", href: "/dashboard/reports" },
-  { name: "تنظیمات", href: "/dashboard/settings" },
+  { name: "گزارش‌ها", href: "/dashboard/reports", requiredPermission: "reports:read" },
+  { name: "تنظیمات", href: "/dashboard/settings", allowedRoles: ["SUPER_ADMIN"] },
 ];
 
 type AppShellProps = {
@@ -46,7 +56,29 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { hasPermission, hasRole } = usePermissions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // فیلتر کردن منوها بر اساس نقش و دسترسی
+  const filteredNavItems = useMemo(() => {
+    return ALL_NAV_ITEMS.filter((item) => {
+      // اگر allowedRoles تعریف شده، بررسی نقش
+      if (item.allowedRoles && item.allowedRoles.length > 0) {
+        if (!user?.role || !hasRole(...item.allowedRoles)) {
+          return false;
+        }
+      }
+
+      // اگر requiredPermission تعریف شده، بررسی permission
+      if (item.requiredPermission) {
+        if (!hasPermission(item.requiredPermission)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [user?.role, hasPermission, hasRole]);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -62,28 +94,32 @@ export function AppShell({
   );
 
   const sidebar = (
-    <aside className="flex w-full flex-col gap-6 rounded-3xl bg-white/95 backdrop-blur-sm border border-slate-200/60 p-6 shadow-soft lg:w-64">
+    <aside className="flex w-full flex-col gap-6 rounded-3xl bg-white backdrop-blur-sm border-2 border-slate-300 p-6 shadow-md lg:w-64">
       <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">TamirBan CRM</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">TamirBan CRM</span>
           <span className="text-lg font-semibold text-slate-800">تعمیربان</span>
         </div>
-        <span className="inline-flex items-center justify-center rounded-full bg-gradient-primary px-3 py-1 text-xs font-semibold text-white shadow-soft-primary">
+        <span
+          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+          className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-500/20"
+        >
           v0.1
         </span>
       </header>
 
       <nav className="flex flex-col">
-        {NAV_ITEMS.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive = activeHref === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
+              style={isActive ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : undefined}
               className={[
                 "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive 
-                  ? "bg-gradient-primary text-white shadow-soft-primary" 
+                  ? "text-white shadow-md shadow-blue-500/20" 
                   : "text-slate-800 hover:bg-primary-100/60 focus:bg-primary-100/60 font-medium",
               ].join(" ")}
             >
@@ -153,8 +189,8 @@ export function AppShell({
           {sidebar}
         </div>
 
-        <main className="flex w-full flex-1 flex-col gap-6 rounded-3xl bg-white/95 backdrop-blur-sm p-6 shadow-soft md:p-8 border border-slate-200/60">
-          <header className="flex flex-col gap-4 border-b border-slate-200/60 pb-6">
+        <main className="flex w-full flex-1 flex-col gap-6 rounded-3xl bg-white backdrop-blur-sm p-6 shadow-md md:p-8 border-2 border-slate-300">
+          <header className="flex flex-col gap-4 border-b-2 border-slate-300 pb-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-semibold leading-tight md:text-3xl text-slate-800">{title}</h1>
@@ -169,7 +205,7 @@ export function AppShell({
 
           <div className="flex flex-col gap-6">{children}</div>
 
-          <footer className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <footer className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <span>© {new Date().getFullYear()} TamirBan CRM, تمامی حقوق محفوظ است.</span>
             {resolvedFooter}
           </footer>

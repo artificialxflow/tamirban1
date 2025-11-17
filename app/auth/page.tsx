@@ -155,7 +155,10 @@ export default function AuthPreviewPage() {
 
         <div className="grid items-start gap-8 md:grid-cols-2">
           <div className="relative">
-            <div className="absolute -top-6 left-6 rounded-full bg-gradient-primary px-4 py-1 text-xs font-semibold text-white shadow-soft-primary">
+            <div
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+              className="absolute -top-6 left-6 rounded-full px-4 py-1 text-xs font-semibold text-white shadow-md shadow-blue-500/20"
+            >
               گام ۱ — درخواست کد
             </div>
             <OTPCard

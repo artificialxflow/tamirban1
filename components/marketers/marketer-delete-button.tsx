@@ -20,7 +20,7 @@ export function MarketerDeleteButton({ marketerId, marketerName, onDelete }: Mar
 
     setIsDeleting(true);
     try {
-      const response = await apiClient.delete(`/api/marketers/${marketerId}`);
+      const response = await apiClient.delete(`/marketers/${marketerId}`);
       if (response.success) {
         onDelete?.(marketerId);
         window.location.reload();
@@ -39,7 +39,7 @@ export function MarketerDeleteButton({ marketerId, marketerName, onDelete }: Mar
     <button
       onClick={handleDelete}
       disabled={isDeleting}
-      className="rounded-full border border-rose-200 px-4 py-2 text-rose-600 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-full border border-rose-200 px-2 py-1.5 text-[10px] text-rose-600 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-xs"
     >
       {isDeleting ? "در حال حذف..." : "حذف"}
     </button>

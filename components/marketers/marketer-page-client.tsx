@@ -11,6 +11,7 @@ import { MarketerPagination } from "./marketer-pagination";
 import { MarketerDeleteButton } from "./marketer-delete-button";
 import type { MarketerSummary } from "@/lib/services/marketers.service";
 import { apiClient } from "@/lib/utils/api-client";
+import { ProtectedComponent } from "@/components/common/protected-component";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
 
@@ -52,7 +53,7 @@ export function MarketerPageClient({
         total: number;
         page: number;
         limit: number;
-      }>(`/api/marketers?${params.toString()}`);
+      }>(`/marketers?${params.toString()}`);
       if (response.success && response.data) {
         setMarketers(response.data.data);
         setTotal(response.data.total);
@@ -86,12 +87,15 @@ export function MarketerPageClient({
             <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
               خروجی عملکرد
             </button>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-medium text-white shadow-soft-primary transition hover:opacity-90"
-            >
-              افزودن بازاریاب جدید
-            </button>
+            <ProtectedComponent role="SUPER_ADMIN">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+                className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50"
+              >
+                افزودن بازاریاب جدید
+              </button>
+            </ProtectedComponent>
           </>
         }
         toolbar={
@@ -113,12 +117,15 @@ export function MarketerPageClient({
                 فیلتر وضعیت
               </button>
             </div>
-            <div className="flex items-center justify-between rounded-2xl bg-gradient-primary px-5 py-4 text-sm text-white shadow-soft-primary">
+            <div
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+              className="flex items-center justify-between rounded-2xl px-5 py-4 text-sm text-white shadow-lg shadow-blue-500/25"
+            >
               <div className="flex flex-col">
-                <span className="text-xs text-slate-400">میانگین نرخ تبدیل تیم</span>
+                <span className="text-xs text-white/80">میانگین نرخ تبدیل تیم</span>
                 <span className="text-2xl font-semibold">{numberFormatter.format(avgConversion)}٪</span>
               </div>
-              <div className="text-xs text-emerald-400">+۵٪ نسبت به ماه قبل</div>
+              <div className="text-xs text-emerald-300 font-medium">+۵٪ نسبت به ماه قبل</div>
             </div>
           </div>
         }
@@ -130,7 +137,7 @@ export function MarketerPageClient({
           </div>
         ) : (
           <>
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <MarketerList marketers={marketers} onEdit={handleEdit} onDelete={handleDelete} />
             </section>
             <MarketerPagination total={total} page={page} limit={limit} />

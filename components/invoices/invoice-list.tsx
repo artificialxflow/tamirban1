@@ -42,10 +42,21 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
   const router = useRouter();
 
   const handleDownloadPDF = async (invoiceId: string) => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("authToken="))
-      ?.split("=")[1];
+    // دریافت token از localStorage
+    const stored = localStorage.getItem("auth_tokens");
+    if (!stored) {
+      alert("لطفا دوباره وارد شوید");
+      return;
+    }
+
+    let token: string | null = null;
+    try {
+      const tokens = JSON.parse(stored);
+      token = tokens.accessToken || null;
+    } catch {
+      alert("لطفا دوباره وارد شوید");
+      return;
+    }
 
     if (!token) {
       alert("لطفا دوباره وارد شوید");
@@ -60,14 +71,26 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
       });
 
       if (!response.ok) {
-        throw new Error("خطا در دانلود PDF");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "خطا در دانلود PDF");
       }
 
       const blob = await response.blob();
+      
+      // دریافت نام فایل از header یا استفاده از invoiceId
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = `invoice-${invoiceId}.pdf`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `invoice-${invoiceId}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

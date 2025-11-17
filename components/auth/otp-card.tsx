@@ -109,7 +109,7 @@ export function OTPCard({
         <h1 className="text-2xl font-semibold text-slate-800">
           {isRequest ? "کد تایید را دریافت کنید" : "کد ارسال‌شده را وارد کنید"}
         </h1>
-        <p className="text-sm leading-7 text-slate-500">
+        <p className="text-sm leading-7 text-slate-600">
           {isRequest
             ? "شماره موبایل کاری خود را وارد کنید تا کد تایید برایتان ارسال شود."
             : phone
@@ -196,14 +196,15 @@ export function OTPCard({
 
         <button
           type="submit"
-          className="mt-2 rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+          className="mt-2 inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={loading || isDisabled}
         >
           {loading ? "در حال پردازش..." : isRequest ? "دریافت کد تایید" : "ورود به داشبورد"}
         </button>
       </form>
 
-      <footer className="flex flex-col gap-2 text-xs text-slate-400">
+      <footer className="flex flex-col gap-2 text-xs text-slate-500">
         {isRequest ? (
           <span>
             با ورود به سیستم، شرایط و قوانین تعمیربان را می‌پذیرم. کد ارسال‌شده تنها ۵ دقیقه اعتبار دارد.

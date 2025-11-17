@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 
 import { updateMarketerAction, type UpdateMarketerFormState } from "@/app/dashboard/marketers/actions";
 import type { MarketerSummary } from "@/lib/services/marketers.service";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const updateMarketerDefaultState: UpdateMarketerFormState = {
   success: false,
@@ -16,7 +17,8 @@ function SubmitButton() {
   return (
     <button
       type="submit"
-      className="rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+      style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+      className="inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
       disabled={pending}
     >
       {pending ? "در حال به‌روزرسانی..." : "به‌روزرسانی بازاریاب"}
@@ -34,6 +36,8 @@ interface MarketerEditModalProps {
 export function MarketerEditModal({ marketer, isOpen, onClose, onSuccess }: MarketerEditModalProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useActionState(updateMarketerAction, updateMarketerDefaultState);
+  const { getAccessToken } = useAuth();
+  const currentToken = getAccessToken();
 
   useEffect(() => {
     if (state.success) {
@@ -80,6 +84,7 @@ export function MarketerEditModal({ marketer, isOpen, onClose, onSuccess }: Mark
 
         <form ref={formRef} className="grid grid-cols-1 gap-4 md:grid-cols-2" action={formAction}>
           <input type="hidden" name="marketerId" value={marketer.id} />
+          {currentToken && <input type="hidden" name="currentUserIdToken" value={currentToken} />}
 
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
             نام و نام خانوادگی

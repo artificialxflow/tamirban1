@@ -24,7 +24,10 @@ export default function ReportsPage() {
           <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
             خروجی Excel
           </button>
-          <button className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90">
+          <button
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50"
+          >
             تولید PDF
           </button>
         </div>
@@ -32,28 +35,28 @@ export default function ReportsPage() {
     >
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {kpis.map((item) => (
-          <article key={item.title} className="rounded-2xl border border-slate-200/60 bg-slate-50/50 p-5 transition hover:bg-slate-50 hover:shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-500">{item.title}</h2>
+          <article key={item.title} className="rounded-2xl border-2 border-slate-300 bg-white p-5 shadow-sm transition hover:bg-slate-50 hover:shadow-md">
+            <h2 className="text-sm font-semibold text-slate-600">{item.title}</h2>
             <p className="mt-3 text-2xl font-semibold text-slate-800">{item.value}</p>
-            <span className="mt-2 inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+            <span className="mt-2 inline-flex w-fit rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
               {item.delta}
             </span>
           </article>
         ))}
       </section>
 
-      <section className="rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6">
-        <header className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <section className="rounded-3xl border-2 border-slate-300 bg-white p-6 shadow-sm">
+        <header className="flex flex-col gap-3 border-b-2 border-slate-300 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-slate-800">روند ماهانه</h2>
-            <p className="text-xs text-slate-500">ثابت نگهدارنده برای نمایش دیتای روندی در نسخه نهایی</p>
+            <p className="text-xs text-slate-600">ثابت نگهدارنده برای نمایش دیتای روندی در نسخه نهایی</p>
           </div>
           <button className="text-xs font-medium text-primary-600 hover:text-primary-700">مشاهده جزئیات</button>
         </header>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {timeline.map((item) => (
-            <article key={item.label} className="flex flex-col gap-2 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
-              <span className="text-xs font-medium text-slate-400">{item.label}</span>
+            <article key={item.label} className="flex flex-col gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+              <span className="text-xs font-medium text-slate-500">{item.label}</span>
               <span className="text-base font-semibold text-slate-800">{item.value}</span>
               <span className="text-xs text-primary-700 font-medium">{item.status}</span>
             </article>
@@ -61,12 +64,12 @@ export default function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6">
+      <section className="rounded-3xl border-2 border-slate-300 bg-white p-6 shadow-sm">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold text-slate-800">TODO اتصال به Data Warehouse</h2>
-          <span className="text-xs text-slate-500">این بخش بر اساس تصمیم فاز ۶ به داده واقعی متصل خواهد شد.</span>
+          <span className="text-xs text-slate-600">این بخش بر اساس تصمیم فاز ۶ به داده واقعی متصل خواهد شد.</span>
         </header>
-        <p className="mt-4 text-sm leading-7 text-slate-600">
+        <p className="mt-4 text-sm leading-7 text-slate-700">
           این صفحه در حال حاضر صرفاً برای تایید چیدمان و نمایش شاخص‌های کلیدی طراحی شده است. پس از اتصال به سرویس آمار،
           نمودارها و جداول تعاملی جایگزین کارت‌های نمونه خواهند شد.
         </p>

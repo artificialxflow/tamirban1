@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listCustomerSummaries, createCustomer } from "@/lib/services/customers.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 import type { CustomerStatus } from "@/lib/types";
 import { CUSTOMER_STATUSES } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("customers:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -44,9 +44,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("customers:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

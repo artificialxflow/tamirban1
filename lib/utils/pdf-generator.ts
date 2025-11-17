@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
-import type { Invoice, InvoiceLineItem } from "@/lib/types";
+import type { Invoice } from "@/lib/types";
+import { toJalaali } from "jalaali-js";
 
 /**
  * تبدیل عدد به فرمت فارسی (با جداکننده هزارگان)
@@ -12,8 +13,7 @@ function formatNumber(num: number): string {
  * تبدیل تاریخ به فرمت شمسی
  */
 function formatJalaliDate(date: Date): string {
-  const { toJalali } = require("jalaali-js");
-  const jalali = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  const jalali = toJalaali(date.getFullYear(), date.getMonth() + 1, date.getDate());
   return `${jalali.jy}/${String(jalali.jm).padStart(2, "0")}/${String(jalali.jd).padStart(2, "0")}`;
 }
 
@@ -23,6 +23,9 @@ function formatJalaliDate(date: Date): string {
 export async function generateInvoicePDF(invoice: Invoice, customerName?: string, marketerName?: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
+      // ایجاد PDF document
+      // استفاده از فونت‌های استاندارد PDF که pdfkit به صورت built-in دارد
+      // این فونت‌ها نیازی به فایل ندارند و در همه محیط‌ها کار می‌کنند
       const doc = new PDFDocument({
         size: "A4",
         margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -34,29 +37,69 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
         const pdfBuffer = Buffer.concat(buffers);
         resolve(pdfBuffer);
       });
-      doc.on("error", reject);
+      doc.on("error", (error) => {
+        console.error("[PDF Generator] PDF generation error:", error);
+        reject(error);
+      });
 
+      // استفاده از فونت‌های استاندارد PDF که pdfkit به صورت built-in دارد
+      // Times-Roman و Times-Bold فونت‌های استاندارد PDF هستند که نیازی به فایل ندارند
+      // این فونت‌ها در همه محیط‌ها (development و production) کار می‌کنند
+      // مهم: باید از همان ابتدا فونت را تنظیم کنیم تا pdfkit از Helvetica استفاده نکند
+      // pdfkit به صورت پیش‌فرض از Helvetica استفاده می‌کند، پس باید فونت را از همان ابتدا تنظیم کنیم
+      // استفاده از try-catch برای مدیریت خطاهای فونت
+      const setFont = (fontName: string) => {
+        try {
+          doc.font(fontName);
+          return true;
+        } catch (error) {
+          console.warn(`[PDF Generator] Font ${fontName} not available:`, error);
+          return false;
+        }
+      };
+
+      // تلاش برای تنظیم فونت از همان ابتدا
+      // اول Times-Roman، سپس Courier، در نهایت فونت پیش‌فرض
+      if (!setFont("Times-Roman")) {
+        if (!setFont("Courier")) {
+          console.warn("[PDF Generator] Using default font (may cause Helvetica.afm error)");
+        }
+      }
+      
       // هدر پیش‌فاکتور
-      doc.fontSize(24).font("Helvetica-Bold").text("پیش‌فاکتور", { align: "right" });
+      doc.fontSize(24);
+      setFont("Times-Bold");
+      doc.text("پیش‌فاکتور", { align: "right" });
       doc.moveDown(0.5);
-      doc.fontSize(12).font("Helvetica").text(`شماره: ${invoice.meta?.invoiceNumber || invoice._id}`, { align: "right" });
+      const invoiceNumber = (invoice.meta?.invoiceNumber as string) || invoice._id;
+      doc.fontSize(12);
+      setFont("Times-Roman");
+      doc.text(`شماره: ${invoiceNumber}`, { align: "right" });
       doc.moveDown(0.3);
+      setFont("Times-Roman");
       doc.text(`تاریخ صدور: ${formatJalaliDate(invoice.issuedAt)}`, { align: "right" });
+      setFont("Times-Roman");
       doc.text(`تاریخ سررسید: ${formatJalaliDate(invoice.dueAt)}`, { align: "right" });
       doc.moveDown(1);
 
       // اطلاعات مشتری
-      doc.fontSize(14).font("Helvetica-Bold").text("مشتری:", { align: "right" });
+      doc.fontSize(14);
+      setFont("Times-Bold");
+      doc.text("مشتری:", { align: "right" });
       doc.moveDown(0.3);
-      doc.fontSize(12).font("Helvetica").text(customerName || "مشتری ناشناس", { align: "right" });
+      doc.fontSize(12);
+      setFont("Times-Roman");
+      doc.text(customerName || "مشتری ناشناس", { align: "right" });
       if (marketerName) {
         doc.moveDown(0.3);
+        setFont("Times-Roman");
         doc.text(`مسئول بازاریابی: ${marketerName}`, { align: "right" });
       }
       doc.moveDown(1);
 
       // جدول آیتم‌ها
-      doc.fontSize(12).font("Helvetica-Bold");
+      doc.fontSize(12);
+      setFont("Times-Bold");
       const tableTop = doc.y;
       const itemHeight = 20;
       const colWidths = {
@@ -70,12 +113,19 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
       };
 
       // هدر جدول
+      setFont("Times-Bold");
       doc.text("شرح", 50, tableTop);
+      setFont("Times-Bold");
       doc.text("تعداد", 50 + colWidths.title, tableTop);
+      setFont("Times-Bold");
       doc.text("واحد", 50 + colWidths.title + colWidths.quantity, tableTop);
+      setFont("Times-Bold");
       doc.text("قیمت واحد", 50 + colWidths.title + colWidths.quantity + colWidths.unit, tableTop);
+      setFont("Times-Bold");
       doc.text("تخفیف", 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice, tableTop);
+      setFont("Times-Bold");
       doc.text("مالیات", 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount, tableTop);
+      setFont("Times-Bold");
       doc.text("جمع", 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount + colWidths.tax, tableTop);
 
       // خط جداکننده
@@ -83,9 +133,10 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
       doc.moveDown(0.5);
 
       // آیتم‌ها
-      doc.fontSize(10).font("Helvetica");
+      doc.fontSize(10);
+      setFont("Times-Roman");
       let currentY = doc.y;
-      invoice.items.forEach((item, index) => {
+      invoice.items.forEach((item) => {
         if (currentY > 700) {
           // صفحه جدید
           doc.addPage();
@@ -112,7 +163,8 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
 
       // خلاصه مبالغ
       const summaryY = doc.y;
-      doc.fontSize(12).font("Helvetica");
+      doc.fontSize(12);
+      setFont("Times-Roman");
       doc.text("جمع کل:", 400, summaryY);
       doc.text(formatNumber(invoice.subtotal), 500, summaryY);
       doc.moveDown(0.5);
@@ -127,7 +179,8 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
       doc.text(formatNumber(invoice.taxTotal), 500, doc.y);
       doc.moveDown(0.5);
 
-      doc.fontSize(14).font("Helvetica-Bold");
+      doc.fontSize(14);
+      setFont("Times-Bold");
       doc.text("مبلغ قابل پرداخت:", 400, doc.y);
       doc.text(formatNumber(invoice.grandTotal), 500, doc.y);
       doc.moveDown(1);
@@ -140,7 +193,8 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
         OVERDUE: "معوق",
         CANCELLED: "لغو شد",
       };
-      doc.fontSize(12).font("Helvetica");
+      doc.fontSize(12);
+      setFont("Times-Roman");
       doc.text(`وضعیت: ${statusLabels[invoice.status] || invoice.status}`, { align: "right" });
       if (invoice.paidAt) {
         doc.text(`تاریخ پرداخت: ${formatJalaliDate(invoice.paidAt)}`, { align: "right" });

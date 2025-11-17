@@ -22,6 +22,9 @@ export type InvoiceSummary = {
 
 export type InvoiceDetail = Invoice & {
   customerName?: string;
+  customerPhone?: string;
+  customerCity?: string;
+  customerAddress?: string;
   marketerName?: string;
 };
 
@@ -160,7 +163,10 @@ export async function listInvoices(
   ]);
 
   // برای نمایش نام مشتری و بازاریاب، باید از جداول مربوطه fetch کنیم
-  const customerIds = Array.from(new Set(invoices.map((inv) => inv.customerId)));
+  // invoice.customerId و invoice.marketerId از نوع string هستند (طبق interface)
+  const customerIds = Array.from(
+    new Set(invoices.map((inv) => inv.customerId).filter(Boolean) as string[]),
+  );
   const marketerIds = Array.from(
     new Set(invoices.map((inv) => inv.marketerId).filter(Boolean) as string[]),
   );
@@ -170,36 +176,121 @@ export async function listInvoices(
   const customersCollection = await getCustomersCollection();
   const usersCollection = await getUsersCollection();
 
-  const [customers, marketers] = await Promise.all([
-    customersCollection
-      .find({ _id: { $in: customerIds.map((id) => new ObjectId(id)) } as any })
-      .toArray(),
-    marketerIds.length > 0
-      ? usersCollection
-          .find({ _id: { $in: marketerIds.map((id) => new ObjectId(id)) } as any })
-          .toArray()
-      : Promise.resolve([]),
-  ]);
+  // تلاش برای پیدا کردن مشتری‌ها با استفاده از ObjectId و string
+  const customers: Array<{ _id: any; displayName: string }> = [];
+  if (customerIds.length > 0) {
+    // تلاش اول: با ObjectId
+    try {
+      const customersWithObjectId = await customersCollection
+        .find({ _id: { $in: customerIds.map((id) => new ObjectId(id)) } as any })
+        .toArray();
+      customers.push(...customersWithObjectId);
+    } catch (error) {
+      console.warn("[listInvoices] Error finding customers with ObjectId:", error);
+    }
 
-  const customerMap = new Map(customers.map((c) => [c._id.toString(), c.displayName]));
-  const marketerMap = new Map(
-    marketers.map((m) => [m._id.toString(), m.fullName || "بازاریاب ناشناس"]),
-  );
+    // تلاش دوم: با string (برای مشتری‌هایی که پیدا نشدند)
+    const foundIds = new Set(customers.map((c) => c._id.toString()));
+    const missingIds = customerIds.filter((id) => !foundIds.has(id));
+    if (missingIds.length > 0) {
+      try {
+        const customersWithString = await customersCollection
+          .find({ _id: { $in: missingIds } as any })
+          .toArray();
+        customers.push(...customersWithString);
+      } catch (error) {
+        console.warn("[listInvoices] Error finding customers with string:", error);
+      }
+    }
+  }
 
-  const data: InvoiceSummary[] = invoices.map((invoice) => ({
-    id: invoice._id.toString(),
-    invoiceNumber: (invoice.meta?.invoiceNumber as string) || invoice._id.toString(),
-    customerId: invoice.customerId,
-    customerName: customerMap.get(invoice.customerId) || "مشتری ناشناس",
-    marketerId: invoice.marketerId,
-    marketerName: invoice.marketerId ? marketerMap.get(invoice.marketerId) : undefined,
-    status: invoice.status,
-    issuedAt: invoice.issuedAt,
-    dueAt: invoice.dueAt,
-    grandTotal: invoice.grandTotal,
-    currency: invoice.currency,
-    paidAt: invoice.paidAt,
-  }));
+  // تلاش برای پیدا کردن بازاریاب‌ها
+  const marketers: Array<{ _id: any; fullName?: string }> = [];
+  if (marketerIds.length > 0) {
+    try {
+      const marketersWithObjectId = await usersCollection
+        .find({ _id: { $in: marketerIds.map((id) => new ObjectId(id)) } as any })
+        .toArray();
+      marketers.push(...marketersWithObjectId);
+    } catch (error) {
+      console.warn("[listInvoices] Error finding marketers with ObjectId:", error);
+    }
+
+    const foundMarketerIds = new Set(marketers.map((m) => m._id.toString()));
+    const missingMarketerIds = marketerIds.filter((id) => !foundMarketerIds.has(id));
+    if (missingMarketerIds.length > 0) {
+      try {
+        const marketersWithString = await usersCollection
+          .find({ _id: { $in: missingMarketerIds } as any })
+          .toArray();
+        marketers.push(...marketersWithString);
+      } catch (error) {
+        console.warn("[listInvoices] Error finding marketers with string:", error);
+      }
+    }
+  }
+
+  // ساخت map با استفاده از string برای هر دو طرف
+  const customerMap = new Map<string, string>();
+  customers.forEach((c) => {
+    const id = c._id.toString();
+    customerMap.set(id, c.displayName);
+    // همچنین با customerId که ممکن است string باشد (برای اطمینان)
+    // اما Customer interface ندارد customerId، پس فقط _id را استفاده می‌کنیم
+  });
+
+  const marketerMap = new Map<string, string>();
+  marketers.forEach((m) => {
+    const id = m._id.toString();
+    marketerMap.set(id, m.fullName || "بازاریاب ناشناس");
+  });
+
+  const data: InvoiceSummary[] = invoices.map((invoice) => {
+    // invoice.customerId و invoice.marketerId از نوع string هستند (طبق interface)
+    const customerIdStr = invoice.customerId || "";
+    const marketerIdStr = invoice.marketerId || undefined;
+
+    // پیدا کردن نام مشتری
+    // تلاش با customerIdStr مستقیم
+    let customerName = customerMap.get(customerIdStr);
+    
+    // اگر پیدا نشد، تلاش با تبدیل به ObjectId و سپس string
+    if (!customerName && customerIdStr) {
+      try {
+        const objectIdStr = new ObjectId(customerIdStr).toString();
+        customerName = customerMap.get(objectIdStr);
+      } catch (error) {
+        // ignore - ممکن است customerIdStr خودش ObjectId string باشد
+      }
+    }
+    
+    // اگر هنوز پیدا نشد، از "مشتری ناشناس" استفاده می‌کنیم
+    customerName = customerName || "مشتری ناشناس";
+    
+    // لاگ برای دیباگ (فقط در صورت نیاز)
+    if (customerName === "مشتری ناشناس" && customerIdStr) {
+      console.warn(`[listInvoices] Customer not found for ID: ${customerIdStr}`, {
+        customerIdStr,
+        availableIds: Array.from(customerMap.keys()).slice(0, 5), // فقط 5 تا اول برای لاگ
+        invoiceId: invoice._id,
+      });
+    }
+
+    return {
+      id: invoice._id.toString(),
+      invoiceNumber: (invoice.meta?.invoiceNumber as string) || invoice._id.toString(),
+      customerId: customerIdStr,
+      customerName,
+      marketerId: marketerIdStr,
+      marketerName: marketerIdStr ? (marketerMap.get(marketerIdStr) || undefined) : undefined,
+      status: invoice.status,
+      issuedAt: invoice.issuedAt,
+      dueAt: invoice.dueAt,
+      grandTotal: invoice.grandTotal,
+      currency: invoice.currency,
+      paidAt: invoice.paidAt,
+    };
+  });
 
   return { data, total, page, limit };
 }
@@ -219,16 +310,36 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetail |
   const customersCollection = await getCustomersCollection();
   const usersCollection = await getUsersCollection();
 
-  const [customer, marketer] = await Promise.all([
-    customersCollection.findOne({ _id: new ObjectId(invoice.customerId) } as any),
-    invoice.marketerId
-      ? usersCollection.findOne({ _id: new ObjectId(invoice.marketerId) } as any)
-      : Promise.resolve(null),
-  ]);
+  // تلاش برای پیدا کردن مشتری با استفاده از customerId
+  // ممکن است customerId به صورت string یا ObjectId باشد
+  let customer = null;
+  try {
+    // ابتدا تلاش می‌کنیم با ObjectId
+    customer = await customersCollection.findOne({ _id: new ObjectId(invoice.customerId) } as any);
+  } catch (error) {
+    // اگر خطا داد، ممکن است customerId خودش ObjectId باشد
+    console.error("[getInvoiceById] Error finding customer with ObjectId:", error);
+  }
+
+  // اگر پیدا نشد، تلاش می‌کنیم با string
+  if (!customer) {
+    try {
+      customer = await customersCollection.findOne({ _id: invoice.customerId } as any);
+    } catch (error) {
+      console.error("[getInvoiceById] Error finding customer with string:", error);
+    }
+  }
+
+  const marketer = invoice.marketerId
+    ? await usersCollection.findOne({ _id: new ObjectId(invoice.marketerId) } as any)
+    : null;
 
   return {
     ...invoice,
-    customerName: customer?.displayName,
+    customerName: customer?.displayName || undefined,
+    customerPhone: customer?.contact?.phone || undefined,
+    customerCity: customer?.contact?.city || undefined,
+    customerAddress: customer?.contact?.address || undefined,
     marketerName: marketer?.fullName || undefined,
   };
 }

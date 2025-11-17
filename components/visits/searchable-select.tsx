@@ -30,6 +30,8 @@ export function SearchableSelect({
     : options;
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -37,11 +39,22 @@ export function SearchableSelect({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    // استفاده از setTimeout برای جلوگیری از بسته شدن فوری منو
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 0);
 
-  const handleSelect = (optionId: string) => {
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (optionId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     onChange(optionId);
     setIsOpen(false);
     setSearchTerm("");
@@ -52,8 +65,12 @@ export function SearchableSelect({
       <input type="hidden" name={name} value={value || ""} required={required} />
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-right text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-right text-sm text-slate-700 outline-none transition hover:border-primary-300 focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
       >
         <div className="flex items-center justify-between">
           <span className={selectedOption ? "text-slate-700" : "text-slate-400"}>
@@ -71,7 +88,7 @@ export function SearchableSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute z-[60] mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-lg">
           <div className="p-2">
             <input
               type="text"
@@ -83,16 +100,16 @@ export function SearchableSelect({
             />
           </div>
           <div className="max-h-60 overflow-y-auto">
-            {options.length === 0 ? (
-              <div className="px-4 py-3 text-center text-sm text-slate-500">در حال بارگذاری...</div>
-            ) : filteredOptions.length === 0 ? (
-              <div className="px-4 py-3 text-center text-sm text-slate-500">نتیجه‌ای یافت نشد</div>
+            {filteredOptions.length === 0 ? (
+              <div className="px-4 py-3 text-center text-sm text-slate-500">
+                {options.length === 0 ? "هیچ گزینه‌ای موجود نیست" : "نتیجه‌ای یافت نشد"}
+              </div>
             ) : (
               filteredOptions.map((option) => (
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => handleSelect(option.id)}
+                  onClick={(e) => handleSelect(option.id, e)}
                   className={`w-full px-4 py-2 text-right text-sm transition hover:bg-slate-50 ${
                     value === option.id ? "bg-primary-50 text-primary-700 font-medium" : "text-slate-700"
                   }`}

@@ -13,7 +13,7 @@ type MarketersPageProps = {
 export default async function MarketersPage({ searchParams }: MarketersPageProps) {
   const params = await searchParams;
   const page = params.page ? parseInt(params.page, 10) : 1;
-  const limit = 8; // 2 rows × 4 columns = 8 cards
+  const limit = 9; // 3 rows × 3 columns = 9 cards
 
   let isActive: boolean | undefined;
   if (params.isActive === "true") {

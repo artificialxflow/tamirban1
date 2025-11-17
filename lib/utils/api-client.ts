@@ -135,6 +135,8 @@ export class ApiClient {
   private async request<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     let token = getAccessToken();
     const stored = localStorage.getItem(TOKEN_KEY);
+    
+    console.log("[ApiClient] Request:", endpoint, { hasToken: !!token, hasStored: !!stored });
 
     // بررسی انقضای token و تمدید در صورت نیاز
     if (token && isTokenExpired(token) && stored) {
@@ -174,9 +176,12 @@ export class ApiClient {
       ...options,
       headers,
     });
+    
+    console.log("[ApiClient] Response:", endpoint, { status: response.status, ok: response.ok });
 
     // بررسی خطای 401 (Unauthorized)
     if (response.status === 401) {
+      console.error("[ApiClient] Unauthorized - redirecting to auth");
       if (typeof window !== "undefined") {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem("auth_user");
@@ -185,13 +190,23 @@ export class ApiClient {
       throw new Error("Unauthorized");
     }
 
+    // بررسی خطای HTTP دیگر
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("[ApiClient] HTTP Error:", response.status, errorData);
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
+    console.log("[ApiClient] Response data:", endpoint, { success: data.success, hasData: !!data.data });
     return data as ApiResponse<T>;
   }
 }
 
 /**
  * Instance پیش‌فرض
+ * همیشه از relative path استفاده می‌کند (/api)
+ * endpoint ها باید بدون /api/ باشند (مثلاً /customers به جای /api/customers)
  */
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient("/api");
 

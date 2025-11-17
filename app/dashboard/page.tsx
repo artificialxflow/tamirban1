@@ -38,7 +38,10 @@ export default async function DashboardPage() {
           <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
             گزارش لحظه‌ای
           </button>
-          <button className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-medium text-white shadow-soft-primary transition hover:opacity-90">
+          <button
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50"
+          >
             ثبت مشتری جدید
           </button>
         </>
@@ -49,7 +52,7 @@ export default async function DashboardPage() {
             <input
               type="search"
               placeholder="جستجو در مشتریان، ویزیت‌ها یا پیش‌فاکتور..."
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-500 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
             />
           </div>
           <div className={`flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-xs ${systemStatus.textClass}`}>
@@ -61,16 +64,16 @@ export default async function DashboardPage() {
     >
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {overview.stats.map((item) => (
-          <article key={item.label} className="rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6 transition hover:bg-slate-50 hover:shadow-sm">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{item.label}</p>
+          <article key={item.label} className="rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-sm transition hover:bg-slate-50 hover:shadow-md">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-600">{item.label}</p>
             <p className="mt-3 text-3xl font-semibold text-slate-800">{item.value}</p>
-            <p className={`mt-2 text-xs ${STAT_TONE_CLASS[item.tone] ?? "text-slate-500"}`}>{item.helper}</p>
+            <p className={`mt-2 text-xs ${STAT_TONE_CLASS[item.tone] ?? "text-slate-600"}`}>{item.helper}</p>
           </article>
         ))}
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-2 rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6">
+        <section className="lg:col-span-2 rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-sm">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-800">ویزیت‌های امروز</h2>
             <Link href="#" className="text-xs font-medium text-primary-600 hover:text-primary-700">
@@ -82,40 +85,40 @@ export default async function DashboardPage() {
               {overview.todayVisits.map((visit) => (
                 <li
                   key={visit.id}
-                  className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600"
+                  className="flex items-center justify-between rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700"
                 >
                   <div className="flex flex-col gap-1">
                     <span className="font-semibold text-slate-800">{visit.customer}</span>
-                    {visit.marketer ? <span className="text-xs text-slate-500">{visit.marketer}</span> : null}
+                    {visit.marketer ? <span className="text-xs text-slate-600">{visit.marketer}</span> : null}
                   </div>
                   <div className="flex items-center gap-3 text-xs">
-                    <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-500">ساعت {visit.timeLabel}</span>
-                    <span className="rounded-full bg-primary-100 border border-primary-200 px-3 py-1 font-medium text-primary-700">{visit.statusLabel}</span>
+                    <span className="rounded-full bg-white border border-slate-300 px-3 py-1 font-medium text-slate-600">ساعت {visit.timeLabel}</span>
+                    <span className="rounded-full bg-primary-100 border-2 border-primary-300 px-3 py-1 font-medium text-primary-700">{visit.statusLabel}</span>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-white/70 px-6 py-12 text-center text-sm text-slate-500">
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-600">
               <span>برای امروز ویزیت برنامه‌ریزی نشده است.</span>
               <span>با ثبت ویزیت جدید، این بخش به‌صورت خودکار بروز خواهد شد.</span>
             </div>
           )}
         </section>
 
-        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6">
+        <section className="flex flex-col gap-4 rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-sm">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-800">چک‌لیست فوری</h2>
             <button className="text-xs font-medium text-primary-600 hover:text-primary-700">افزودن وظیفه</button>
           </header>
-          <ul className="flex flex-col gap-3 text-sm text-slate-600">
+          <ul className="flex flex-col gap-3 text-sm text-slate-700">
             {overview.quickTasks.map((task) => (
               <li
                 key={task.id}
-                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                className="flex items-center justify-between rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
               >
                 <span>{task.title}</span>
-                <span className={`text-xs ${TASK_TONE_CLASS[task.tone] ?? "text-slate-500"}`}>{task.statusLabel}</span>
+                <span className={`text-xs ${TASK_TONE_CLASS[task.tone] ?? "text-slate-600"}`}>{task.statusLabel}</span>
               </li>
             ))}
           </ul>

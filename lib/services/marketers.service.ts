@@ -192,12 +192,23 @@ export async function createMarketer(input: unknown) {
   return getMarketerDetail(user._id);
 }
 
-export async function updateMarketer(marketerId: string, input: unknown) {
+export async function updateMarketer(marketerId: string, input: unknown, currentUserId?: string) {
   const payload = updateMarketerSchema.parse(input);
   const user = await usersRepository.findById(marketerId);
 
-  if (!user || user.role !== "MARKETER") {
-    throw new Error("بازاریاب یافت نشد.");
+  if (!user) {
+    throw new Error("کاربر یافت نشد.");
+  }
+
+  // بررسی محدودسازی دسترسی ادمین اصلی
+  // اگر کاربر در حال ویرایش خودش است و SUPER_ADMIN است، نباید بتواند نقش یا وضعیت خود را تغییر دهد
+  if (currentUserId && marketerId === currentUserId && user.role === "SUPER_ADMIN") {
+    if (payload.role !== undefined && payload.role !== user.role) {
+      throw new Error("شما نمی‌توانید نقش خود را تغییر دهید. این محدودیت برای حفظ امنیت سیستم است.");
+    }
+    if (payload.isActive !== undefined && payload.isActive !== user.isActive) {
+      throw new Error("شما نمی‌توانید حساب خود را غیرفعال کنید. این محدودیت برای حفظ امنیت سیستم است.");
+    }
   }
 
   const updateUserDoc: Partial<User> = {};
@@ -231,9 +242,11 @@ export async function updateMarketer(marketerId: string, input: unknown) {
   const now = new Date();
   if (Object.keys(updateUserDoc).length > 0) {
     await usersRepository.updateById(marketerId, {
-      ...updateUserDoc,
-      updatedAt: now,
-      updatedBy: "system",
+      $set: {
+        ...updateUserDoc,
+        updatedAt: now,
+        updatedBy: "system",
+      },
     } as never);
   }
 
@@ -242,9 +255,11 @@ export async function updateMarketer(marketerId: string, input: unknown) {
     const profile = await marketersRepository.findOne({ userId: marketerId } as never);
     if (profile) {
       await marketersRepository.updateById(String(profile._id), {
-        region: payload.region,
-        updatedAt: now,
-        updatedBy: "system",
+        $set: {
+          region: payload.region,
+          updatedAt: now,
+          updatedBy: "system",
+        },
       } as never);
     } else {
       // Create profile if it doesn't exist

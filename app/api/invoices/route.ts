@@ -4,16 +4,16 @@ import {
   listInvoices,
   createInvoice,
 } from "@/lib/services/invoices.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 import type { InvoiceStatus } from "@/lib/types";
 
 const INVOICE_STATUSES: InvoiceStatus[] = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"];
 
 export async function GET(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

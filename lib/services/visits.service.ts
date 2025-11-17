@@ -273,7 +273,7 @@ export async function listVisits(
 
   const total = await visitsRepository.count(query as never);
   const visits = await visitsRepository.findMany(query as never, {
-    sort: { scheduledAt: -1 },
+    sort: { createdAt: -1, scheduledAt: -1 }, // اول بر اساس تاریخ ایجاد (جدیدترین در بالا)، سپس بر اساس زمان برنامه‌ریزی شده
     skip,
     limit,
   });
@@ -385,7 +385,11 @@ export async function createVisit(input: unknown) {
 
   // Update customer's lastVisitAt
   await customersRepository.updateById(payload.customerId, {
-    lastVisitAt: payload.scheduledAt,
+    $set: {
+      lastVisitAt: payload.scheduledAt,
+      updatedAt: now,
+      updatedBy: "system",
+    },
   } as never);
 
   return getVisitDetail(document._id);

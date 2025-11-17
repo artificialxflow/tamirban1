@@ -58,9 +58,10 @@ export function InvoicePagination({ total, page, limit }: InvoicePaginationProps
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
+                style={page === pageNum ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : undefined}
                 className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
                   page === pageNum
-                    ? "bg-gradient-primary text-white shadow-soft-primary"
+                    ? "text-white shadow-md shadow-blue-500/20"
                     : "border-2 border-primary-300 bg-primary-100 text-primary-800 hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
                 }`}
               >

@@ -1,15 +1,15 @@
 import { NextRequest } from "next/server";
 
 import { changeVisitStatus } from "@/lib/services/visits.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 type RouteContext = { params: Promise<{ visitId: string }> };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

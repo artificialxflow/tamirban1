@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 
 import { listMarketers, createMarketer } from "@/lib/services/marketers.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission, requireRole } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 export async function GET(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("marketers:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const roleResult = await requireRole("SUPER_ADMIN")(request);
+  if (!roleResult.success) {
+    return roleResult.response;
   }
 
   try {

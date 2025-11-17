@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
 import { createCustomer, deleteCustomer, updateCustomer } from "@/lib/services/customers.service";
 
@@ -34,6 +35,13 @@ export async function createCustomerAction(
       message: "مشتری با موفقیت ثبت شد.",
     };
   } catch (error) {
+    if (error instanceof ZodError) {
+      const firstError = error.issues[0];
+      return {
+        success: false,
+        message: firstError?.message || "خطا در اعتبارسنجی داده‌ها",
+      };
+    }
     const message = error instanceof Error ? error.message : "ثبت مشتری با خطا مواجه شد.";
     return {
       success: false,
@@ -73,6 +81,13 @@ export async function updateCustomerAction(
       message: "مشتری با موفقیت به‌روزرسانی شد.",
     };
   } catch (error) {
+    if (error instanceof ZodError) {
+      const firstError = error.issues[0];
+      return {
+        success: false,
+        message: firstError?.message || "خطا در اعتبارسنجی داده‌ها",
+      };
+    }
     const message = error instanceof Error ? error.message : "به‌روزرسانی مشتری با خطا مواجه شد.";
     return {
       success: false,

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getVisitDetail, updateVisit, deleteVisit } from "@/lib/services/visits.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 type RouteContext = { params: Promise<{ visitId: string }> };
 
 async function getHandler(request: NextRequest, context: RouteContext) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -33,9 +33,9 @@ async function getHandler(request: NextRequest, context: RouteContext) {
 }
 
 async function patchHandler(request: NextRequest, context: RouteContext) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -49,9 +49,9 @@ async function patchHandler(request: NextRequest, context: RouteContext) {
 }
 
 async function deleteHandler(request: NextRequest, context: RouteContext) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:delete")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

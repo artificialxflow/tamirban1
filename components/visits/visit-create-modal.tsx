@@ -20,7 +20,8 @@ function SubmitButton() {
   return (
     <button
       type="submit"
-      className="rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+      style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+      className="inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
       disabled={pending}
     >
       {pending ? "در حال ثبت..." : "ثبت ویزیت"}
@@ -42,42 +43,113 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   const [loading, setLoading] = useState(true);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedMarketerId, setSelectedMarketerId] = useState<string>("");
+  const [modalKey, setModalKey] = useState(0); // Key برای reset کردن component
 
   useEffect(() => {
     if (isOpen) {
       // Reset states when modal opens
       setSelectedCustomerId("");
       setSelectedMarketerId("");
+      setLoading(true);
+      
+      console.log("[VisitCreateModal] Fetching customers and marketers...");
       
       // Fetch customers and marketers for dropdowns
       Promise.all([
-        apiClient.get<{ data: CustomerSummary[]; total: number; page: number; limit: number }>("/api/customers?limit=100"),
-        apiClient.get<{ data: MarketerSummary[]; total: number; page: number; limit: number }>("/api/marketers?limit=100"),
+        apiClient.get<{ data: CustomerSummary[]; total: number; page: number; limit: number }>("/customers?limit=100"),
+        apiClient.get<{ data: MarketerSummary[]; total: number; page: number; limit: number }>("/marketers?limit=100"),
       ])
         .then(([customersRes, marketersRes]) => {
           console.log("Customers response:", customersRes);
           console.log("Marketers response:", marketersRes);
           
-          if (customersRes.success && customersRes.data) {
-            const customersData = customersRes.data.data || [];
-            console.log("Setting customers:", customersData.length, customersData);
+          // ساختار پاسخ: { success: true, data: { data: [...], total, page, limit } }
+          console.log("[VisitCreateModal] Full customers response:", JSON.stringify(customersRes, null, 2));
+          
+          if (customersRes.success && 'data' in customersRes && customersRes.data) {
+            const responseData = customersRes.data as { data?: CustomerSummary[]; total?: number; page?: number; limit?: number };
+            console.log("[VisitCreateModal] Customers response data:", responseData);
+            
+            // بررسی چند حالت مختلف برای ساختار پاسخ
+            let customersData: CustomerSummary[] = [];
+            
+            if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+              if (Array.isArray(responseData.data)) {
+                customersData = responseData.data;
+              } else {
+                console.warn("[VisitCreateModal] responseData.data is not an array:", responseData.data);
+              }
+            } else if (Array.isArray(responseData)) {
+              customersData = responseData;
+            } else {
+              console.warn("[VisitCreateModal] Unexpected customers data structure:", responseData);
+            }
+            
+            console.log("[VisitCreateModal] Extracted customers:", customersData.length, customersData);
+            if (customersData.length > 0) {
+              console.log("[VisitCreateModal] First customer sample:", {
+                id: customersData[0].id,
+                name: customersData[0].name,
+                code: customersData[0].code,
+              });
+            }
             setCustomers(customersData);
           } else {
-            console.error("Failed to fetch customers:", customersRes);
+            console.error("[VisitCreateModal] Failed to fetch customers:", {
+              success: customersRes.success,
+              hasData: 'data' in customersRes,
+              response: customersRes,
+            });
             setCustomers([]);
           }
-          if (marketersRes.success && marketersRes.data) {
-            const marketersData = marketersRes.data.data || [];
-            console.log("Setting marketers:", marketersData.length, marketersData);
+          
+          console.log("[VisitCreateModal] Full marketers response:", JSON.stringify(marketersRes, null, 2));
+          
+          if (marketersRes.success && 'data' in marketersRes && marketersRes.data) {
+            const responseData = marketersRes.data as { data?: MarketerSummary[]; total?: number; page?: number; limit?: number };
+            console.log("[VisitCreateModal] Marketers response data:", responseData);
+            
+            // بررسی چند حالت مختلف برای ساختار پاسخ
+            let marketersData: MarketerSummary[] = [];
+            
+            if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+              if (Array.isArray(responseData.data)) {
+                marketersData = responseData.data;
+              } else {
+                console.warn("[VisitCreateModal] responseData.data is not an array:", responseData.data);
+              }
+            } else if (Array.isArray(responseData)) {
+              marketersData = responseData;
+            } else {
+              console.warn("[VisitCreateModal] Unexpected marketers data structure:", responseData);
+            }
+            
+            console.log("[VisitCreateModal] Extracted marketers:", marketersData.length, marketersData);
+            if (marketersData.length > 0) {
+              console.log("[VisitCreateModal] First marketer sample:", {
+                id: marketersData[0].id,
+                fullName: marketersData[0].fullName,
+                region: marketersData[0].region,
+                isActive: marketersData[0].isActive,
+              });
+            }
             setMarketers(marketersData);
           } else {
-            console.error("Failed to fetch marketers:", marketersRes);
+            console.error("[VisitCreateModal] Failed to fetch marketers:", {
+              success: marketersRes.success,
+              hasData: 'data' in marketersRes,
+              response: marketersRes,
+            });
             setMarketers([]);
           }
           setLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching data:", error);
+          console.error("Error details:", {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          });
           setCustomers([]);
           setMarketers([]);
           setLoading(false);
@@ -86,16 +158,31 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   }, [isOpen]);
 
   useEffect(() => {
-    if (state.success) {
+    // فقط وقتی مودال باز است و state.success true است، مودال را ببند
+    if (state.success && isOpen) {
       onSuccess?.();
-      setTimeout(() => {
+      // بستن مودال بعد از 500ms برای نمایش پیام موفقیت
+      const timer = setTimeout(() => {
         formRef.current?.reset();
         setSelectedCustomerId("");
         setSelectedMarketerId("");
         onClose();
-      }, 1000);
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [state.success, onClose, onSuccess]);
+  }, [state.success, isOpen, onClose, onSuccess]);
+
+  // Reset state وقتی مودال باز می‌شود
+  useEffect(() => {
+    if (isOpen) {
+      // Reset form و state وقتی مودال باز می‌شود
+      formRef.current?.reset();
+      setSelectedCustomerId("");
+      setSelectedMarketerId("");
+      setModalKey((prev) => prev + 1); // تغییر key برای reset کردن component
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -157,7 +244,7 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
                   const input = formRef.current?.querySelector<HTMLInputElement>('input[name="customerId"]');
                   if (input) input.value = value;
                 }}
-                placeholder="جستجو و انتخاب مشتری..."
+                placeholder={customers.length === 0 ? "هیچ مشتری‌ای ثبت نشده است" : "جستجو و انتخاب مشتری..."}
               />
             </label>
 
@@ -178,13 +265,14 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
                   const input = formRef.current?.querySelector<HTMLInputElement>('input[name="marketerId"]');
                   if (input) input.value = value;
                 }}
-                placeholder="جستجو و انتخاب بازاریاب..."
+                placeholder={marketers.filter((m) => m.isActive).length === 0 ? "هیچ بازاریابی فعالی ثبت نشده است" : "جستجو و انتخاب بازاریاب..."}
               />
             </label>
 
             <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
               تاریخ و ساعت <span className="text-rose-500">*</span>
               <PersianDateTimePicker
+                key={`date-picker-${modalKey}`}
                 name="scheduledAt"
                 required
                 defaultValue={defaultDateTimeString}

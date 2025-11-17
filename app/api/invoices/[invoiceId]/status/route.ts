@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { changeInvoiceStatus } from "@/lib/services/invoices.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 import type { InvoiceStatus } from "@/lib/types";
 
@@ -14,9 +14,9 @@ type RouteParams = {
 };
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("invoices:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

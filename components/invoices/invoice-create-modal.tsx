@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createInvoice } from "@/app/dashboard/invoices/actions";
+import { PersianDateTimePicker } from "@/components/visits/persian-date-time-picker";
 
 interface InvoiceLineItem {
   title: string;
@@ -71,6 +72,14 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
       return;
     }
 
+    // تبدیل تاریخ شمسی به ISO string
+    const dueAtDate = new Date(dueAt);
+    if (isNaN(dueAtDate.getTime())) {
+      setError("تاریخ سررسید معتبر نیست");
+      setLoading(false);
+      return;
+    }
+
     if (items.some((item) => !item.title || item.unitPrice <= 0)) {
       setError("لطفا تمام آیتم‌ها را به درستی پر کنید");
       setLoading(false);
@@ -82,7 +91,7 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
         customerId,
         marketerId: marketerId || undefined,
         status: "DRAFT",
-        dueAt: new Date(dueAt).toISOString(),
+        dueAt: dueAtDate.toISOString(),
         currency: "IRR",
         items: items.map((item) => ({
           title: item.title,
@@ -167,11 +176,9 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               تاریخ سررسید *
-              <input
+              <PersianDateTimePicker
                 name="dueAt"
-                type="date"
                 required
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
               />
             </label>
           </div>
@@ -294,7 +301,8 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
             <button
               type="submit"
               disabled={loading}
-              className="rounded-full bg-gradient-primary px-6 py-2 text-sm font-medium text-white shadow-soft-primary transition hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+              className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "در حال ثبت..." : "ثبت پیش‌فاکتور"}
             </button>

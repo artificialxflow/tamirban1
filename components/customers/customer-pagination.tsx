@@ -71,9 +71,10 @@ export function CustomerPagination({ total, page, limit }: CustomerPaginationPro
               <Link
                 key={pageNum}
                 href={createPageUrl(pageNum)}
+                style={pageNum === page ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : undefined}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                   pageNum === page
-                    ? "bg-gradient-primary text-white shadow-soft-primary"
+                    ? "text-white shadow-md shadow-blue-500/20"
                     : "text-primary-700 hover:bg-primary-50 border border-primary-200"
                 }`}
               >

@@ -2,6 +2,7 @@
 
 import type { MarketerSummary } from "@/lib/services/marketers.service";
 import { MarketerDeleteButton } from "./marketer-delete-button";
+import { ProtectedComponent } from "@/components/common/protected-component";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
 const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
@@ -47,55 +48,63 @@ export function MarketerList({ marketers, onEdit, onDelete }: MarketerListProps)
       {marketers.map((marketer) => (
         <article
           key={marketer.id}
-          className="flex flex-col gap-4 rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6 transition hover:border-primary-300 hover:shadow-soft hover:bg-slate-50"
+          className="flex min-w-0 flex-col gap-4 rounded-3xl border-2 border-slate-300 bg-white p-4 sm:p-6 shadow-sm transition hover:border-primary-400 hover:shadow-md hover:bg-slate-50"
         >
-          <header className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary text-base font-semibold text-white shadow-soft-primary">
+          <header className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <span
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold text-white shadow-md shadow-blue-500/20 sm:h-12 sm:w-12 sm:text-base"
+              >
                 {getInitials(marketer.fullName)}
               </span>
-              <div className="flex flex-col">
-                <h2 className="text-base font-semibold text-slate-800">{marketer.fullName}</h2>
-                <p className="text-xs text-slate-500">منطقه: {marketer.region}</p>
+              <div className="min-w-0 flex-1 flex-col overflow-hidden">
+                <h2 className="truncate text-sm font-semibold text-slate-800 sm:text-base">{marketer.fullName}</h2>
+                <p className="truncate text-xs text-slate-600">منطقه: {marketer.region}</p>
               </div>
             </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(marketer.isActive)}`}>
+            <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold sm:px-3 sm:text-xs ${getStatusBadgeClass(marketer.isActive)}`}>
               {getStatusLabel(marketer.isActive)}
             </span>
           </header>
 
-          <div className="grid grid-cols-2 gap-4 text-xs text-slate-500">
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="text-slate-400">تعداد مشتری</p>
-              <p className="mt-1 text-lg font-semibold text-slate-800">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs text-slate-600">
+            <div className="min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-2 py-2 sm:px-3 sm:py-3">
+              <p className="truncate text-[10px] text-slate-500 sm:text-xs">تعداد مشتری</p>
+              <p className="mt-1 truncate text-base font-semibold text-slate-800 sm:text-lg">
                 {numberFormatter.format(marketer.assignedCustomersCount)}
               </p>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="text-slate-400">امتیاز عملکرد</p>
-              <p className="mt-1 text-lg font-semibold text-slate-800">
+            <div className="min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-2 py-2 sm:px-3 sm:py-3">
+              <p className="truncate text-[10px] text-slate-500 sm:text-xs">امتیاز عملکرد</p>
+              <p className="mt-1 truncate text-base font-semibold text-slate-800 sm:text-lg">
                 {marketer.performanceScore ? numberFormatter.format(marketer.performanceScore) : "-"}
               </p>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="text-slate-400">آخرین ویزیت</p>
-              <p className="mt-1 text-sm font-semibold text-slate-800">{formatDate(marketer.lastVisitAt)}</p>
+            <div className="min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-2 py-2 sm:px-3 sm:py-3">
+              <p className="truncate text-[10px] text-slate-500 sm:text-xs">آخرین ویزیت</p>
+              <p className="mt-1 truncate text-xs font-semibold text-slate-800 sm:text-sm">{formatDate(marketer.lastVisitAt)}</p>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="text-slate-400">نقش</p>
-              <p className="mt-1 text-sm font-semibold text-slate-800">{marketer.role}</p>
+            <div className="min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-2 py-2 sm:px-3 sm:py-3">
+              <p className="truncate text-[10px] text-slate-500 sm:text-xs">نقش</p>
+              <p className="mt-1 truncate text-xs font-semibold text-slate-800 sm:text-sm">{marketer.role}</p>
             </div>
           </div>
 
-          <footer className="flex items-center justify-between gap-2 text-xs">
+          <footer className="flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs">
             <button
               onClick={() => onEdit?.(marketer)}
-              className="rounded-full bg-gradient-primary px-4 py-2 text-white shadow-soft-primary transition hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+              className="inline-flex shrink-0 items-center justify-center rounded-full px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-sm"
             >
               ویرایش
             </button>
-            <button className="text-primary-600 transition hover:text-primary-700">ارسال پیام</button>
-            <MarketerDeleteButton marketerId={marketer.id} marketerName={marketer.fullName} onDelete={onDelete} />
+            <button className="shrink-0 truncate text-[10px] text-primary-600 transition hover:text-primary-700 sm:text-xs">ارسال پیام</button>
+            <ProtectedComponent role="SUPER_ADMIN">
+              <div className="shrink-0">
+                <MarketerDeleteButton marketerId={marketer.id} marketerName={marketer.fullName} onDelete={onDelete} />
+              </div>
+            </ProtectedComponent>
           </footer>
         </article>
       ))}

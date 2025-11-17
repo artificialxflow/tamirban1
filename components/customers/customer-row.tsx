@@ -6,6 +6,7 @@ import { CustomerDeleteButton } from "./customer-delete-button";
 import { CustomerEditModal } from "./customer-edit-modal";
 import type { CustomerSummary, CustomerDetail } from "@/lib/services/customers.service";
 import type { CustomerStatus } from "@/lib/types";
+import { ProtectedComponent } from "@/components/common/protected-component";
 
 const STATUS_LABELS: Record<CustomerStatus, string> = {
   ACTIVE: "فعال",
@@ -103,11 +104,11 @@ export function CustomerRow({ customer, isSelected = false, onSelect }: Customer
         className={`transition cursor-pointer ${isSelected ? "bg-primary-50" : "hover:bg-primary-50/30"}`}
         onClick={handleRowClick}
       >
-        <td className="px-6 py-4 text-xs text-slate-400">{customer.code}</td>
+        <td className="px-6 py-4 text-xs text-slate-500">{customer.code}</td>
         <td className="px-6 py-4 font-semibold text-slate-800">{customer.name}</td>
         <td className="px-6 py-4">{customer.marketer ?? "نامشخص"}</td>
         <td className="px-6 py-4">{customer.city ?? "-"}</td>
-        <td className="px-6 py-4 text-xs text-slate-500">{formatDate(customer.lastVisitAt)}</td>
+        <td className="px-6 py-4 text-xs text-slate-600">{formatDate(customer.lastVisitAt)}</td>
         <td className="px-6 py-4">
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resolveBadgeClass(customer.status)}`}>
             {STATUS_LABELS[customer.status]}
@@ -123,13 +124,16 @@ export function CustomerRow({ customer, isSelected = false, onSelect }: Customer
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={handleEditClick}
-              className="rounded-full bg-gradient-primary px-3 py-1.5 text-xs font-medium text-white shadow-soft-primary transition hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+              className="inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 active:scale-100"
             >
               ویرایش
             </button>
-            <div onClick={(e) => e.stopPropagation()}>
-              <CustomerDeleteButton customerId={customer.id} />
-            </div>
+            <ProtectedComponent role="SUPER_ADMIN">
+              <div onClick={(e) => e.stopPropagation()}>
+                <CustomerDeleteButton customerId={customer.id} />
+              </div>
+            </ProtectedComponent>
           </div>
         </td>
       </tr>

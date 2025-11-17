@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listVisits, createVisit } from "@/lib/services/visits.service";
-import { authenticateRequest } from "@/lib/middleware/auth";
+import { requirePermission } from "@/lib/middleware/rbac";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 import type { VisitStatus } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:read")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await authenticateRequest(request);
-  if (!authResult.success) {
-    return authResult.response;
+  const permissionResult = await requirePermission("visits:write")(request);
+  if (!permissionResult.success) {
+    return permissionResult.response;
   }
 
   try {

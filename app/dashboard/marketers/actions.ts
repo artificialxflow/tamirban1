@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
 import { createMarketer, updateMarketer } from "@/lib/services/marketers.service";
+import { getUserIdFromToken } from "@/lib/utils/server-auth";
 
 export type CreateMarketerFormState = {
   success: boolean;
@@ -36,6 +38,13 @@ export async function createMarketerAction(
       message: "بازاریاب با موفقیت ثبت شد.",
     };
   } catch (error) {
+    if (error instanceof ZodError) {
+      const firstError = error.issues[0];
+      return {
+        success: false,
+        message: firstError?.message || "خطا در اعتبارسنجی داده‌ها",
+      };
+    }
     const message = error instanceof Error ? error.message : "ثبت بازاریاب با خطا مواجه شد.";
     return {
       success: false,
@@ -54,6 +63,10 @@ export async function updateMarketerAction(
       return { success: false, message: "شناسه بازاریاب الزامی است." };
     }
 
+    // دریافت userId فعلی از formData برای بررسی محدودسازی ادمین اصلی
+    const currentUserIdToken = formData.get("currentUserIdToken") as string | null;
+    const currentUserId = currentUserIdToken ? await getUserIdFromToken(currentUserIdToken) : null;
+
     const payload = {
       fullName: formData.get("fullName"),
       mobile: formData.get("mobile"),
@@ -63,7 +76,7 @@ export async function updateMarketerAction(
       isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     };
 
-    await updateMarketer(marketerId, payload);
+    await updateMarketer(marketerId, payload, currentUserId || undefined);
     revalidatePath("/dashboard/marketers");
 
     return {

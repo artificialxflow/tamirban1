@@ -118,6 +118,27 @@ export async function verifyOtp(phone: string, code: string) {
 
   const normalizedPhone = normalizePhone(phone);
 
+  // بررسی کد تست 0000 (همیشه فعال برای تست)
+  const isTestCode = code === FIXED_CODE;
+  
+  if (isTestCode) {
+    // در حالت تست، مستقیماً کاربر را پیدا یا ایجاد می‌کنیم
+    console.log("[OTP Service] استفاده از کد تست 0000 برای شماره:", normalizedPhone);
+    
+    let user = await findUserByPhone(normalizedPhone);
+    if (!user) {
+      user = await createUserWithPhone(normalizedPhone);
+    }
+
+    // پاک کردن هر attempt قبلی
+    await clearOtpAttempt(normalizedPhone);
+
+    const tokenPair = await issueTokenPair(user._id, user.mobile);
+
+    return { ...tokenPair, user };
+  }
+
+  // بررسی عادی OTP
   const attemptRecord = await getOtpAttempt(normalizedPhone);
   if (!attemptRecord) {
     throw new Error("کدی برای این شماره ارسال نشده است.");
