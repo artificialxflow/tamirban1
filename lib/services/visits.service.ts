@@ -1,5 +1,12 @@
+import { ObjectId } from "mongodb";
+import { z } from "zod";
+
+import { visitsRepository } from "@/lib/repositories/visits.repository";
+import { customersRepository } from "@/lib/repositories/customers.repository";
+import { usersRepository } from "@/lib/repositories/users.repository";
 import { getCustomersCollection, getUsersCollection, getVisitsCollection } from "@/lib/db";
-import type { VisitStatus } from "@/lib/types";
+import type { Visit, VisitStatus } from "@/lib/types";
+import type { PaginatedResult } from "@/lib/types";
 
 const timeFormatter = new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" });
 const dateFormatter = new Intl.DateTimeFormat("fa-IR", { month: "2-digit", day: "2-digit" });
@@ -61,11 +68,6 @@ function resolveHelperColor(tone: "info" | "success" | "warning" | "neutral") {
     default:
       return "text-slate-500";
   }
-}
-
-function minutesBetween(start?: Date | null, end?: Date | null) {
-  if (!start || !end) return null;
-  return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000));
 }
 
 export async function getVisitsOverview(): Promise<VisitsOverview> {
@@ -179,4 +181,304 @@ export async function getVisitsOverview(): Promise<VisitsOverview> {
   }
 
   return { summaryCards, reminders, schedule };
+}
+
+// Schemas
+const createVisitSchema = z.object({
+  customerId: z.string().min(1, "شناسه مشتری الزامی است"),
+  marketerId: z.string().min(1, "شناسه بازاریاب الزامی است"),
+  scheduledAt: z.coerce.date({ message: "تاریخ و زمان ویزیت الزامی است" }),
+  topics: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  locationSnapshot: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      address: z.string().optional(),
+    })
+    .optional(),
+  followUpAction: z.string().optional(),
+});
+
+const updateVisitSchema = createVisitSchema.partial();
+
+const changeVisitStatusSchema = z.object({
+  status: z.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
+  completedAt: z.coerce.date().optional(),
+});
+
+export type VisitListFilters = {
+  customerId?: string;
+  marketerId?: string;
+  status?: VisitStatus;
+  startDate?: Date;
+  endDate?: Date;
+  page?: number;
+  limit?: number;
+};
+
+export type VisitSummary = {
+  id: string;
+  customerId: string;
+  customerName: string;
+  marketerId: string;
+  marketerName?: string;
+  scheduledAt: Date;
+  completedAt?: Date | null;
+  status: VisitStatus;
+  topics: string[];
+  notes?: string;
+  followUpAction?: string;
+};
+
+export type VisitDetail = VisitSummary & {
+  locationSnapshot?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+};
+
+// Service Functions
+export async function listVisits(
+  filters: VisitListFilters = {},
+): Promise<PaginatedResult<VisitSummary>> {
+  const query: Record<string, unknown> = {};
+
+  if (filters.customerId) {
+    query.customerId = filters.customerId;
+  }
+
+  if (filters.marketerId) {
+    query.marketerId = filters.marketerId;
+  }
+
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  if (filters.startDate || filters.endDate) {
+    query.scheduledAt = {};
+    if (filters.startDate) {
+      (query.scheduledAt as Record<string, unknown>).$gte = filters.startDate;
+    }
+    if (filters.endDate) {
+      (query.scheduledAt as Record<string, unknown>).$lte = filters.endDate;
+    }
+  }
+
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
+
+  const total = await visitsRepository.count(query as never);
+  const visits = await visitsRepository.findMany(query as never, {
+    sort: { scheduledAt: -1 },
+    skip,
+    limit,
+  });
+
+  // Get customer and marketer names
+  const customerIds = Array.from(new Set(visits.map((v) => v.customerId)));
+  const marketerIds = Array.from(new Set(visits.map((v) => v.marketerId).filter(Boolean)));
+
+  const [customers, marketers] = await Promise.all([
+    customerIds.length
+      ? customersRepository.findMany({ _id: { $in: customerIds } } as never)
+      : Promise.resolve([]),
+    marketerIds.length
+      ? usersRepository.findMany({ _id: { $in: marketerIds } } as never)
+      : Promise.resolve([]),
+  ]);
+
+  const customerMap = new Map(customers.map((c) => [c._id, c.displayName]));
+  const marketerMap = new Map(marketers.map((m) => [m._id, m.fullName]));
+
+  const data: VisitSummary[] = visits.map((visit) => ({
+    id: visit._id,
+    customerId: visit.customerId,
+    customerName: customerMap.get(visit.customerId) ?? "مشتری ناشناس",
+    marketerId: visit.marketerId,
+    marketerName: visit.marketerId ? marketerMap.get(visit.marketerId) : undefined,
+    scheduledAt: visit.scheduledAt,
+    completedAt: visit.completedAt ?? null,
+    status: visit.status,
+    topics: visit.topics ?? [],
+    notes: visit.notes,
+    followUpAction: visit.followUpAction,
+  }));
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+  };
+}
+
+export async function getVisitDetail(visitId: string): Promise<VisitDetail | null> {
+  const visit = await visitsRepository.findById(visitId);
+  if (!visit) {
+    return null;
+  }
+
+  const [customer, marketer] = await Promise.all([
+    customersRepository.findById(visit.customerId),
+    visit.marketerId ? usersRepository.findById(visit.marketerId) : Promise.resolve(null),
+  ]);
+
+  return {
+    id: visit._id,
+    customerId: visit.customerId,
+    customerName: customer?.displayName ?? "مشتری ناشناس",
+    marketerId: visit.marketerId,
+    marketerName: marketer?.fullName,
+    scheduledAt: visit.scheduledAt,
+    completedAt: visit.completedAt ?? null,
+    status: visit.status,
+    topics: visit.topics ?? [],
+    notes: visit.notes,
+    followUpAction: visit.followUpAction,
+    locationSnapshot: visit.locationSnapshot
+      ? {
+          latitude: visit.locationSnapshot.latitude,
+          longitude: visit.locationSnapshot.longitude,
+          address: (visit.locationSnapshot as { address?: string }).address,
+        }
+      : undefined,
+  };
+}
+
+export async function createVisit(input: unknown) {
+  const payload = createVisitSchema.parse(input);
+
+  // Validate customer exists
+  const customer = await customersRepository.findById(payload.customerId);
+  if (!customer) {
+    throw new Error("مشتری یافت نشد.");
+  }
+
+  // Validate marketer exists
+  const marketer = await usersRepository.findById(payload.marketerId);
+  if (!marketer) {
+    throw new Error("بازاریاب یافت نشد.");
+  }
+
+  const now = new Date();
+  const document: Visit = {
+    _id: new ObjectId().toHexString(),
+    customerId: payload.customerId,
+    marketerId: payload.marketerId,
+    scheduledAt: payload.scheduledAt,
+    status: "SCHEDULED",
+    topics: payload.topics ?? [],
+    notes: payload.notes,
+    locationSnapshot: payload.locationSnapshot,
+    followUpAction: payload.followUpAction,
+    createdAt: now,
+    createdBy: "system",
+    updatedAt: now,
+    updatedBy: "system",
+  };
+
+  await visitsRepository.insertOne(document);
+
+  // Update customer's lastVisitAt
+  await customersRepository.updateById(payload.customerId, {
+    lastVisitAt: payload.scheduledAt,
+  } as never);
+
+  return getVisitDetail(document._id);
+}
+
+export async function updateVisit(visitId: string, input: unknown) {
+  const payload = updateVisitSchema.parse(input);
+  const visit = await visitsRepository.findById(visitId);
+
+  if (!visit) {
+    throw new Error("ویزیت یافت نشد.");
+  }
+
+  const updateDoc: Partial<Visit> = {};
+
+  if (payload.customerId !== undefined) {
+    const customer = await customersRepository.findById(payload.customerId);
+    if (!customer) {
+      throw new Error("مشتری یافت نشد.");
+    }
+    updateDoc.customerId = payload.customerId;
+  }
+
+  if (payload.marketerId !== undefined) {
+    const marketer = await usersRepository.findById(payload.marketerId);
+    if (!marketer) {
+      throw new Error("بازاریاب یافت نشد.");
+    }
+    updateDoc.marketerId = payload.marketerId;
+  }
+
+  if (payload.scheduledAt !== undefined) {
+    updateDoc.scheduledAt = payload.scheduledAt;
+  }
+
+  if (payload.topics !== undefined) {
+    updateDoc.topics = payload.topics;
+  }
+
+  if (payload.notes !== undefined) {
+    updateDoc.notes = payload.notes;
+  }
+
+  if (payload.locationSnapshot !== undefined) {
+    updateDoc.locationSnapshot = payload.locationSnapshot;
+  }
+
+  if (payload.followUpAction !== undefined) {
+    updateDoc.followUpAction = payload.followUpAction;
+  }
+
+  const now = new Date();
+  await visitsRepository.updateById(visitId, {
+    ...updateDoc,
+    updatedAt: now,
+    updatedBy: "system",
+  } as never);
+
+  return getVisitDetail(visitId);
+}
+
+export async function changeVisitStatus(visitId: string, input: unknown) {
+  const payload = changeVisitStatusSchema.parse(input);
+  const visit = await visitsRepository.findById(visitId);
+
+  if (!visit) {
+    throw new Error("ویزیت یافت نشد.");
+  }
+
+  const updateDoc: Partial<Visit> = {
+    status: payload.status,
+  };
+
+  if (payload.status === "COMPLETED" && !visit.completedAt) {
+    updateDoc.completedAt = payload.completedAt ?? new Date();
+  } else if (payload.status !== "COMPLETED") {
+    updateDoc.completedAt = undefined;
+  }
+
+  const now = new Date();
+  await visitsRepository.updateById(visitId, {
+    ...updateDoc,
+    updatedAt: now,
+    updatedBy: "system",
+  } as never);
+
+  return getVisitDetail(visitId);
+}
+
+export async function deleteVisit(visitId: string) {
+  const deleted = await visitsRepository.deleteById(visitId);
+  if (!deleted) {
+    throw new Error("ویزیت یافت نشد.");
+  }
+  return true;
 }

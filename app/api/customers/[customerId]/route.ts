@@ -1,53 +1,78 @@
-import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { NextRequest, NextResponse } from "next/server";
 
 import { deleteCustomer, getCustomerDetail, updateCustomer } from "@/lib/services/customers.service";
-
-function buildErrorResponse(error: unknown, status = 400) {
-  const message = error instanceof Error ? error.message : "خطای غیرمنتظره رخ داد";
-  return NextResponse.json({ success: false, message }, { status });
-}
+import { authenticateRequest } from "@/lib/middleware/auth";
+import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 type RouteContext = { params: Promise<{ customerId: string }> };
 
-export async function GET(_: Request, context: RouteContext) {
-  const { customerId } = await context.params;
-  const customer = await getCustomerDetail(customerId);
-  if (!customer) {
-    return NextResponse.json({ success: false, message: "مشتری یافت نشد." }, { status: 404 });
+async function getHandler(request: NextRequest, context: RouteContext) {
+  const authResult = await authenticateRequest(request);
+  if (!authResult.success) {
+    return authResult.response;
   }
 
-  return NextResponse.json({ success: true, data: customer });
+  try {
+    const { customerId } = await context.params;
+    const customer = await getCustomerDetail(customerId);
+    if (!customer) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "مشتری یافت نشد.",
+          code: "NOT_FOUND",
+        },
+        { status: 404 },
+      );
+    }
+
+    return successResponse(customer);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
-export async function PATCH(request: Request, context: RouteContext) {
+async function patchHandler(request: NextRequest, context: RouteContext) {
+  const authResult = await authenticateRequest(request);
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const payload = await request.json();
     const { customerId } = await context.params;
     const customer = await updateCustomer(customerId, payload);
-    return NextResponse.json({ success: true, data: customer });
+    return successResponse(customer, "مشتری با موفقیت به‌روزرسانی شد.");
   } catch (error) {
-    if (error instanceof ZodError) {
-      return buildErrorResponse(error, 422);
-    }
-    if (error instanceof Error && error.message === "مشتری یافت نشد.") {
-      return buildErrorResponse(error, 404);
-    }
-    return buildErrorResponse(error, 400);
+    return handleApiError(error);
   }
 }
 
-export async function DELETE(_: Request, context: RouteContext) {
+async function deleteHandler(request: NextRequest, context: RouteContext) {
+  const authResult = await authenticateRequest(request);
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
   try {
     const { customerId } = await context.params;
     await deleteCustomer(customerId);
-    return NextResponse.json({ success: true });
+    return successResponse(null, "مشتری با موفقیت حذف شد.");
   } catch (error) {
-    if (error instanceof Error && error.message === "مشتری یافت نشد.") {
-      return buildErrorResponse(error, 404);
-    }
-    return buildErrorResponse(error, 400);
+    return handleApiError(error);
   }
+}
+
+export async function GET(request: NextRequest, context: RouteContext) {
+  return getHandler(request, context);
+}
+
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  return patchHandler(request, context);
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  return deleteHandler(request, context);
 }
 
 

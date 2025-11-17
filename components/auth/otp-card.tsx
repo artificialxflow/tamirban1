@@ -25,7 +25,7 @@ type OTPCardProps = {
 const MESSAGE_STYLES = {
   success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   error: "border-rose-200 bg-rose-50 text-rose-600",
-  info: "border-sky-200 bg-sky-50 text-sky-600",
+  info: "border-primary-200 bg-primary-50 text-primary-700",
 };
 
 export function OTPCard({
@@ -102,11 +102,11 @@ export function OTPCard({
   return (
     <div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl bg-white/95 p-8 shadow-soft backdrop-blur">
       <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-3 text-sm font-semibold text-sky-500">
-          <span className="inline-flex h-2 w-2 rounded-full bg-sky-500" />
+        <div className="flex items-center gap-3 text-sm font-semibold text-primary-600">
+          <span className="inline-flex h-2 w-2 rounded-full bg-primary-500" />
           ورود به تعمیربان
         </div>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-800">
           {isRequest ? "کد تایید را دریافت کنید" : "کد ارسال‌شده را وارد کنید"}
         </h1>
         <p className="text-sm leading-7 text-slate-500">
@@ -141,7 +141,7 @@ export function OTPCard({
                 <input
                   type="tel"
                   placeholder="مثال: 09123456789"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                   value={phone}
                   onChange={handlePhoneInput}
                   inputMode="numeric"
@@ -152,7 +152,7 @@ export function OTPCard({
               </div>
             </label>
             <label className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
-              <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-sky-500" />
+              <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-primary-500" />
               مرا به سیستم بازاریاب‌ها اضافه کن
             </label>
           </>
@@ -172,7 +172,7 @@ export function OTPCard({
                     value={digit}
                     maxLength={1}
                     dir="ltr"
-                    className="h-14 w-14 rounded-2xl border border-slate-200 text-center text-lg font-semibold text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                    className="h-14 w-14 rounded-2xl border border-slate-200 text-center text-lg font-semibold text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                     onChange={handleDigitChange(index)}
                     onKeyDown={handleDigitKeyDown(index)}
                     onPaste={index === 0 ? handleDigitPaste : undefined}
@@ -184,7 +184,7 @@ export function OTPCard({
               <span>کد تست فعلی: 0000</span>
               <button
                 type="button"
-                className="font-semibold text-sky-500 hover:text-sky-600"
+                className="font-semibold text-primary-600 hover:text-primary-700"
                 onClick={onResend}
                 disabled={loading}
               >
@@ -196,7 +196,7 @@ export function OTPCard({
 
         <button
           type="submit"
-          className="mt-2 rounded-2xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-2 rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
           disabled={loading || isDisabled}
         >
           {loading ? "در حال پردازش..." : isRequest ? "دریافت کد تایید" : "ورود به داشبورد"}

@@ -1,9 +1,11 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+
+import { useAuth } from "@/lib/hooks/use-auth";
 
 type NavItem = {
   name: string;
@@ -42,11 +44,17 @@ export function AppShell({
   footerNote,
 }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const resolvedFooter = useMemo(
     () => footerNote ?? <span>آخرین بروزرسانی UI: فاز ۳ — نمونه اولیه داشبورد</span>,
@@ -54,18 +62,18 @@ export function AppShell({
   );
 
   const sidebar = (
-    <aside className="flex w-full flex-col gap-6 rounded-3xl bg-white p-6 shadow-soft lg:w-64">
+    <aside className="flex w-full flex-col gap-6 rounded-3xl bg-white/95 backdrop-blur-sm border border-slate-200/60 p-6 shadow-soft lg:w-64">
       <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">TamirBan CRM</span>
-          <span className="text-lg font-semibold text-slate-900">تعمیربان</span>
+          <span className="text-lg font-semibold text-slate-800">تعمیربان</span>
         </div>
-        <span className="inline-flex items-center justify-center rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+        <span className="inline-flex items-center justify-center rounded-full bg-gradient-primary px-3 py-1 text-xs font-semibold text-white shadow-soft-primary">
           v0.1
         </span>
       </header>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col">
         {NAV_ITEMS.map((item) => {
           const isActive = activeHref === item.href;
           return (
@@ -73,8 +81,10 @@ export function AppShell({
               key={item.name}
               href={item.href}
               className={[
-                "flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors",
-                isActive ? "bg-sky-500 text-white shadow-soft" : "text-slate-600 hover:bg-slate-100",
+                "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                isActive 
+                  ? "bg-gradient-primary text-white shadow-soft-primary" 
+                  : "text-slate-800 hover:bg-primary-100/60 focus:bg-primary-100/60 font-medium",
               ].join(" ")}
             >
               <span>{item.name}</span>
@@ -82,7 +92,7 @@ export function AppShell({
                 <span
                   className={[
                     "rounded-full px-2 py-0.5 text-xs font-semibold",
-                    isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600",
+                    isActive ? "bg-white/20 text-white" : "bg-primary-200 text-primary-800 font-bold",
                   ].join(" ")}
                 >
                   {item.badge}
@@ -93,20 +103,38 @@ export function AppShell({
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-slate-900 p-5 text-white">
-        <p className="text-sm font-semibold">در حالت پیش‌نمایش</p>
-        <p className="text-xs leading-6 text-slate-200">
-          این نسخه تنها برای تایید ساختار UI آماده شده و هنوز به داده‌های واقعی متصل نیست.
-        </p>
-        <button className="rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20">
-          دیدن سناریو نمونه
-        </button>
+      <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-primary-50 border border-primary-100 p-5">
+        {user ? (
+          <>
+            <div className="flex flex-col gap-1">
+              <p className="text-xs text-primary-600 font-medium">کاربر فعلی</p>
+              <p className="text-sm font-semibold text-slate-800">{user.mobile}</p>
+              <p className="text-xs text-slate-600">نقش: {user.role}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-primary-500 px-4 py-2 text-xs font-medium text-white transition hover:bg-primary-600 shadow-sm"
+            >
+              خروج از حساب
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-slate-800">در حالت پیش‌نمایش</p>
+            <p className="text-xs leading-6 text-slate-600">
+              این نسخه تنها برای تایید ساختار UI آماده شده و هنوز به داده‌های واقعی متصل نیست.
+            </p>
+            <button className="rounded-full bg-primary-500 px-4 py-2 text-xs font-medium text-white transition hover:bg-primary-600 shadow-sm">
+              دیدن سناریو نمونه
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 lg:flex-row">
         <div className="flex items-center justify-between lg:hidden">
           <button
@@ -116,7 +144,7 @@ export function AppShell({
             aria-expanded={isMenuOpen}
             aria-controls="tamirban-sidebar"
           >
-            <span className="inline-flex h-2 w-2 rounded-full bg-sky-500" />
+            <span className="inline-flex h-2 w-2 rounded-full bg-primary-500" />
             {isMenuOpen ? "بستن منو" : "باز کردن منو"}
           </button>
         </div>
@@ -125,12 +153,12 @@ export function AppShell({
           {sidebar}
         </div>
 
-        <main className="flex w-full flex-1 flex-col gap-6 rounded-3xl bg-white p-6 shadow-soft md:p-8">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-6">
+        <main className="flex w-full flex-1 flex-col gap-6 rounded-3xl bg-white/95 backdrop-blur-sm p-6 shadow-soft md:p-8 border border-slate-200/60">
+          <header className="flex flex-col gap-4 border-b border-slate-200/60 pb-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold leading-tight md:text-3xl">{title}</h1>
-                {description ? <p className="text-sm text-slate-500">{description}</p> : null}
+                <h1 className="text-2xl font-semibold leading-tight md:text-3xl text-slate-800">{title}</h1>
+                {description ? <p className="text-sm text-slate-600">{description}</p> : null}
               </div>
               {actions ? (
                 <div className="flex flex-wrap items-center gap-3">{actions}</div>

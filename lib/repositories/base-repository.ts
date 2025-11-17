@@ -55,6 +55,11 @@ export abstract class BaseRepository<TSchema extends Document> {
     return result.deletedCount === 1;
   }
 
+  async count(filter: Filter<TSchema> = {}): Promise<number> {
+    const collection = await this.collection();
+    return collection.countDocuments(filter);
+  }
+
   async paginate(
     filter: Filter<TSchema>,
     { page = 1, limit = 20, sortBy = "_id", sortOrder = "desc" }: PaginationParams = {},

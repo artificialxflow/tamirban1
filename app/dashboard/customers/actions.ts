@@ -2,16 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createCustomer, deleteCustomer } from "@/lib/services/customers.service";
+import { createCustomer, deleteCustomer, updateCustomer } from "@/lib/services/customers.service";
 
-type CreateCustomerFormState = {
+export type CreateCustomerFormState = {
   success: boolean;
   message: string | null;
-};
-
-const defaultState: CreateCustomerFormState = {
-  success: false,
-  message: null,
 };
 
 export async function createCustomerAction(
@@ -47,7 +42,44 @@ export async function createCustomerAction(
   }
 }
 
-export { defaultState as createCustomerDefaultState };
+
+export async function updateCustomerAction(
+  _prevState: CreateCustomerFormState,
+  formData: FormData,
+): Promise<CreateCustomerFormState> {
+  try {
+    const customerId = formData.get("customerId") as string;
+    if (!customerId) {
+      return { success: false, message: "شناسه مشتری الزامی است." };
+    }
+
+    const payload = {
+      displayName: formData.get("displayName"),
+      phone: formData.get("phone"),
+      city: formData.get("city") || undefined,
+      status: formData.get("status"),
+      tags: (formData.get("tags") as string | null)
+        ?.split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      notes: formData.get("notes") || undefined,
+    };
+
+    await updateCustomer(customerId, payload);
+    revalidatePath("/dashboard/customers");
+
+    return {
+      success: true,
+      message: "مشتری با موفقیت به‌روزرسانی شد.",
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "به‌روزرسانی مشتری با خطا مواجه شد.";
+    return {
+      success: false,
+      message,
+    };
+  }
+}
 
 export async function deleteCustomerAction(customerId: string) {
   try {

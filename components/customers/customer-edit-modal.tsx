@@ -1,0 +1,184 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+
+import { updateCustomerAction } from "@/app/dashboard/customers/actions";
+import type { CreateCustomerFormState } from "@/app/dashboard/customers/actions";
+import type { CustomerDetail } from "@/lib/services/customers.service";
+import { CUSTOMER_STATUSES } from "@/lib/types";
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "فعال",
+  INACTIVE: "غیرفعال",
+  PENDING: "در انتظار پیگیری",
+  AT_RISK: "احتمال ریزش",
+  LOYAL: "مشتری وفادار",
+  SUSPENDED: "متوقف شده",
+};
+
+const createCustomerDefaultState: CreateCustomerFormState = {
+  success: false,
+  message: null,
+};
+
+interface CustomerEditModalProps {
+  customer: CustomerDetail | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      className="rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+      disabled={pending}
+    >
+      {pending ? "در حال ذخیره..." : "ذخیره تغییرات"}
+    </button>
+  );
+}
+
+export function CustomerEditModal({ customer, isOpen, onClose, onSuccess }: CustomerEditModalProps) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction] = useActionState(updateCustomerAction, createCustomerDefaultState);
+
+  useEffect(() => {
+    if (state.success) {
+      formRef.current?.reset();
+      onSuccess?.();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    }
+  }, [state.success, onClose, onSuccess]);
+
+  if (!isOpen || !customer) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          aria-label="بستن"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <header className="mb-6 border-b border-slate-100 pb-4">
+          <h2 className="text-xl font-semibold text-slate-800">ویرایش مشتری</h2>
+          <p className="mt-1 text-sm text-slate-500">کد مشتری: {customer.code}</p>
+        </header>
+
+        {state.message ? (
+          <div
+            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+              state.success
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-rose-200 bg-rose-50 text-rose-600"
+            }`}
+          >
+            {state.message}
+          </div>
+        ) : null}
+
+        <form ref={formRef} className="grid grid-cols-1 gap-4 md:grid-cols-2" action={formAction}>
+          <input type="hidden" name="customerId" value={customer.id} />
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            نام مشتری
+            <input
+              name="displayName"
+              required
+              defaultValue={customer.name}
+              placeholder="مثال: شرکت آرمان خودرو"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            شماره موبایل
+            <input
+              name="phone"
+              type="tel"
+              required
+              defaultValue={customer.phone || ""}
+              placeholder="09123456789"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            شهر
+            <input
+              name="city"
+              defaultValue={customer.city || ""}
+              placeholder="تهران"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            وضعیت
+            <select
+              name="status"
+              defaultValue={customer.status}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            >
+              {CUSTOMER_STATUSES.map((status) => {
+                const label = STATUS_LABELS[status] ?? status;
+                return (
+                  <option key={status} value={status}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+
+          <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
+            برچسب‌ها (با کاما جدا کنید)
+            <input
+              name="tags"
+              defaultValue={customer.tags?.join(", ") || ""}
+              placeholder="VIP, قطعات, فوری"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+
+          <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
+            یادداشت
+            <textarea
+              name="notes"
+              rows={3}
+              defaultValue={customer.notes || ""}
+              placeholder="توضیحات یا نیازهای ویژه مشتری"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+
+          <div className="md:col-span-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+            >
+              انصراف
+            </button>
+            <SubmitButton />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+

@@ -32,6 +32,9 @@ export type CustomerListFilters = {
   status?: CustomerStatus;
   marketerId?: string;
   search?: string;
+  city?: string;
+  page?: number;
+  limit?: number;
 };
 
 const createCustomerSchema = z.object({
@@ -68,7 +71,9 @@ const updateCustomerSchema = z
   })
   .strict();
 
-export async function listCustomerSummaries(filters: CustomerListFilters = {}): Promise<CustomerSummary[]> {
+export async function listCustomerSummaries(
+  filters: CustomerListFilters = {},
+): Promise<{ data: CustomerSummary[]; total: number; page: number; limit: number }> {
   const query: Filter<Customer> = {};
 
   if (filters.status) {
@@ -77,6 +82,10 @@ export async function listCustomerSummaries(filters: CustomerListFilters = {}): 
 
   if (filters.marketerId) {
     query.assignedMarketerId = filters.marketerId;
+  }
+
+  if (filters.city) {
+    query["contact.city"] = new RegExp(filters.city, "i");
   }
 
   if (filters.search) {
@@ -89,20 +98,37 @@ export async function listCustomerSummaries(filters: CustomerListFilters = {}): 
     ];
   }
 
-  const customers = await customersRepository.findMany(query as never, { sort: { createdAt: -1 } });
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const skip = (page - 1) * limit;
 
-  return customers.map((customer) => ({
-    id: customer._id,
-    code: customer.code,
-    name: customer.displayName,
-    marketer: customer.assignedMarketerName,
-    city: customer.contact.city,
-    lastVisitAt: customer.lastVisitAt ?? null,
-    status: customer.status,
-    grade: customer.grade,
-    monthlyRevenue: customer.revenueMonthly,
-    tags: customer.tags ?? [],
-  }));
+  // شمارش کل رکوردها
+  const total = await customersRepository.count(query as never);
+
+  // دریافت داده‌ها با pagination
+  const customers = await customersRepository.findMany(query as never, {
+    sort: { createdAt: -1 },
+    skip,
+    limit,
+  });
+
+  return {
+    data: customers.map((customer) => ({
+      id: customer._id,
+      code: customer.code,
+      name: customer.displayName,
+      marketer: customer.assignedMarketerName,
+      city: customer.contact.city,
+      lastVisitAt: customer.lastVisitAt ?? null,
+      status: customer.status,
+      grade: customer.grade,
+      monthlyRevenue: customer.revenueMonthly,
+      tags: customer.tags ?? [],
+    })),
+    total,
+    page,
+    limit,
+  };
 }
 
 export async function getCustomerDetail(customerId: string): Promise<CustomerDetail | null> {

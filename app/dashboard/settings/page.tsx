@@ -78,10 +78,10 @@ export default function SettingsPreviewPage() {
       activeHref="/dashboard/settings"
       actions={
         <>
-          <button className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-800">
+          <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
             ذخیره تغییرات
           </button>
-          <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-soft transition hover:bg-slate-800">
+          <button className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-white shadow-soft-primary transition hover:opacity-90">
             بازگشت به تنظیمات پیش‌فرض
           </button>
         </>
@@ -94,7 +94,7 @@ export default function SettingsPreviewPage() {
       }
       footerNote={<span>آخرین بروزرسانی UI: فاز ۳ — ماژول تنظیمات آزمایشی</span>}
     >
-      <section className="rounded-3xl border border-slate-100 bg-white p-6">
+      <section className="rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <nav className="flex flex-wrap gap-2 text-xs font-medium text-slate-500">
             {tabs.map((tab, index) => (
@@ -103,27 +103,27 @@ export default function SettingsPreviewPage() {
                 className={[
                   "rounded-full px-4 py-2 transition",
                   index === 0
-                    ? "bg-sky-500 text-white shadow-soft"
-                    : "border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800",
+                    ? "bg-gradient-primary text-white shadow-soft-primary"
+                    : "border-2 border-primary-300 bg-primary-100 text-primary-800 hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md font-semibold",
                 ].join(" ")}
               >
                 {tab.label}
               </button>
             ))}
           </nav>
-          <button className="rounded-full border border-slate-200 px-4 py-2 text-xs text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
+          <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
             مشاهده تاریخچه تغییرات
           </button>
         </header>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr,1fr]">
-          <section className="rounded-3xl border border-slate-100 bg-white">
-            <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+          <section className="rounded-3xl border border-slate-200/60 bg-slate-50/50">
+            <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">مدیریت نقش‌ها</h2>
+                <h2 className="text-lg font-semibold text-slate-800">مدیریت نقش‌ها</h2>
                 <p className="text-xs text-slate-500">تعریف نقش‌ها و کاربرانی که به آنها تخصیص یافته‌اند</p>
               </div>
-              <button className="rounded-full border border-slate-200 px-4 py-2 text-xs text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
+              <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
                 افزودن نقش جدید
               </button>
             </header>
@@ -131,8 +131,8 @@ export default function SettingsPreviewPage() {
               {roles.map((role) => (
                 <li key={role.name} className="flex flex-col gap-3 px-6 py-5">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-900">{role.name}</h3>
-                    <button className="text-xs text-sky-500 hover:text-sky-600">ویرایش دسترسی‌ها</button>
+                    <h3 className="text-sm font-semibold text-slate-800">{role.name}</h3>
+                    <button className="text-xs font-medium text-primary-600 hover:text-primary-700">ویرایش دسترسی‌ها</button>
                   </div>
                   <p className="text-xs text-slate-500">{role.permissions}</p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-400">
@@ -147,13 +147,13 @@ export default function SettingsPreviewPage() {
             </ul>
           </section>
 
-          <section className="flex flex-col gap-4 rounded-3xl border border-slate-100 bg-white p-6">
+          <section className="flex flex-col gap-4 rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6">
             <header className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">کانال‌های اعلان</h2>
+                <h2 className="text-lg font-semibold text-slate-800">کانال‌های اعلان</h2>
                 <p className="text-xs text-slate-500">بر اساس تصمیم فاز ۵، فعال‌سازی کانال‌ها با داده واقعی انجام می‌شود</p>
               </div>
-              <button className="text-xs font-medium text-sky-500 hover:text-sky-600">تنظیمات پیشرفته</button>
+              <button className="text-xs font-medium text-primary-600 hover:text-primary-700">تنظیمات پیشرفته</button>
             </header>
             <ul className="flex flex-col gap-3 text-sm text-slate-600">
               {notificationChannels.map((channel) => (
@@ -162,15 +162,15 @@ export default function SettingsPreviewPage() {
                   className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
                 >
                   <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-slate-900">{channel.title}</span>
+                    <span className="font-semibold text-slate-800">{channel.title}</span>
                     <span className="text-xs text-slate-500">{channel.description}</span>
                   </div>
                   <button
                     className={[
                       "rounded-full px-4 py-2 text-xs font-medium transition",
                       channel.enabled
-                        ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
-                        : "bg-slate-200 text-slate-600 hover:bg-slate-300",
+                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200"
+                        : "bg-slate-200 text-slate-700 border border-slate-300 hover:bg-slate-300",
                     ].join(" ")}
                   >
                     {channel.enabled ? "فعال" : "غیرفعال"}
@@ -181,13 +181,13 @@ export default function SettingsPreviewPage() {
           </section>
         </div>
 
-        <section className="mt-6 rounded-3xl border border-slate-100 bg-white">
-          <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+        <section className="mt-6 rounded-3xl border border-slate-200/60 bg-slate-50/50">
+          <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">یکپارچگی‌ها</h2>
+              <h2 className="text-lg font-semibold text-slate-800">یکپارچگی‌ها</h2>
               <p className="text-xs text-slate-500">لیست سرویس‌های متصل یا در انتظار اتصال برای فازهای بعدی</p>
             </div>
-            <button className="rounded-full border border-slate-200 px-4 py-2 text-xs text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
+            <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
               افزودن یکپارچگی جدید
             </button>
           </header>
@@ -195,11 +195,11 @@ export default function SettingsPreviewPage() {
             {integrationCards.map((integration) => (
               <article
                 key={integration.name}
-                className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white p-5"
+                className="flex flex-col gap-3 rounded-3xl border border-slate-200/60 bg-slate-50/50 p-5"
               >
                 <header className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-slate-900">{integration.name}</h3>
-                  <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-600">
+                  <h3 className="text-sm font-semibold text-slate-800">{integration.name}</h3>
+                  <span className="rounded-full bg-primary-100 border border-primary-200 px-3 py-1 text-xs font-semibold text-primary-700">
                     {integration.status}
                   </span>
                 </header>
@@ -208,7 +208,7 @@ export default function SettingsPreviewPage() {
                   {integration.actions.map((action) => (
                     <button
                       key={action}
-                      className="rounded-full border border-slate-200 px-4 py-2 text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+                      className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
                     >
                       {action}
                     </button>
@@ -220,32 +220,32 @@ export default function SettingsPreviewPage() {
         </section>
       </section>
 
-      <section className="rounded-3xl border border-slate-100 bg-white p-6">
+      <section className="rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6">
         <header className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">حوزه‌های امنیتی</h2>
+            <h2 className="text-lg font-semibold text-slate-800">حوزه‌های امنیتی</h2>
             <p className="text-xs text-slate-500">
               یادآوری مواردی که باید هنگام پیاده‌سازی واقعی احراز هویت، رمزنگاری و لاگ‌ها در نظر گرفته شود
             </p>
           </div>
-          <button className="text-xs font-medium text-sky-500 hover:text-sky-600">بازبینی سیاست‌ها</button>
+          <button className="text-xs font-medium text-primary-600 hover:text-primary-700">بازبینی سیاست‌ها</button>
         </header>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <article className="flex flex-col gap-3 rounded-2xl bg-slate-50 px-4 py-5 text-xs text-slate-600">
-            <h3 className="text-sm font-semibold text-slate-900">احراز هویت</h3>
+            <h3 className="text-sm font-semibold text-slate-800">احراز هویت</h3>
             <p>OTP رمزنگاری‌شده با bcrypt، صدور JWT و امکان قفل حساب پس از تلاش ناموفق متوالی.</p>
-            <button className="text-xs font-semibold text-sky-500 hover:text-sky-600">نمایش سیاست پیشنهادی</button>
+            <button className="text-xs font-semibold text-primary-600 hover:text-primary-700">نمایش سیاست پیشنهادی</button>
           </article>
           <article className="flex flex-col gap-3 rounded-2xl bg-slate-50 px-4 py-5 text-xs text-slate-600">
-            <h3 className="text-sm font-semibold text-slate-900">ذخیره‌سازی داده</h3>
+            <h3 className="text-sm font-semibold text-slate-800">ذخیره‌سازی داده</h3>
             <p>عدم ذخیره OTP خام، نگهداری لاگ رویدادها و پاکسازی برنامه‌ریزی‌شده اطلاعات حساس.</p>
-            <button className="text-xs font-semibold text-sky-500 hover:text-sky-600">چک‌لیست دیتابیس</button>
+            <button className="text-xs font-semibold text-primary-600 hover:text-primary-700">چک‌لیست دیتابیس</button>
           </article>
           <article className="flex flex-col gap-3 rounded-2xl bg-slate-50 px-4 py-5 text-xs text-slate-600">
-            <h3 className="text-sm font-semibold text-slate-900">انطباق و مانیتورینگ</h3>
+            <h3 className="text-sm font-semibold text-slate-800">انطباق و مانیتورینگ</h3>
             <p>تعریف هشدار برای تلاش‌های مشکوک، ثبت لاگ و هشدار ایمیلی برای مدیر امنیت.</p>
-            <button className="text-xs font-semibold text-sky-500 hover:text-sky-600">لیست اقدامات</button>
+            <button className="text-xs font-semibold text-primary-600 hover:text-primary-700">لیست اقدامات</button>
           </article>
         </div>
       </section>

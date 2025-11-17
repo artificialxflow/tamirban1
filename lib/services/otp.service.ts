@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { incrementAttempt, upsertOtpAttempt, getOtpAttempt, clearOtpAttempt } from "@/lib/repositories/otp-attempts.repository";
 import { createUserWithPhone, findUserByPhone } from "@/lib/repositories/users.repository";
 import { smsLogsRepository } from "@/lib/repositories/sms-logs.repository";
-import { issueJwt } from "@/lib/utils/jwt";
+import { issueTokenPair } from "@/lib/services/auth.service";
 import { generateOtpCode } from "@/lib/utils/otp";
 import { normalizePhone } from "@/lib/utils/phone";
 import { sendOtpSms } from "@/lib/vendors/taban-sms";
@@ -141,8 +141,8 @@ export async function verifyOtp(phone: string, code: string) {
 
   await clearOtpAttempt(normalizedPhone);
 
-  const token = await issueJwt({ sub: user._id, phone: user.mobile, type: "access" });
+  const tokenPair = await issueTokenPair(user._id, user.mobile);
 
-  return { token, user };
+  return { ...tokenPair, user };
 }
 

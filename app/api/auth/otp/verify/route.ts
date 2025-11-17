@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifyOtp } from "@/lib/services/otp.service";
+import { handleApiError, successResponse } from "@/lib/utils/errors";
 
 export async function POST(request: Request) {
   try {
@@ -10,9 +11,17 @@ export async function POST(request: Request) {
 
     const result = await verifyOtp(phone, code);
 
-    return NextResponse.json({ success: true, token: result.token, user: result.user });
+    return successResponse(
+      {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+        refreshExpiresIn: result.refreshExpiresIn,
+        user: result.user,
+      },
+      "ورود با موفقیت انجام شد.",
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "خطای غیرمنتظره رخ داد";
-    return NextResponse.json({ success: false, message }, { status: 400 });
+    return handleApiError(error);
   }
 }

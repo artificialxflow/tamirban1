@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
-      <body className="min-h-screen bg-slate-50 text-slate-900">
+      <body className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800">
         <div className="min-h-screen">
           {children}
         </div>

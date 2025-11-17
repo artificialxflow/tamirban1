@@ -100,9 +100,16 @@ export default function AuthPreviewPage() {
         throw new Error(data.message ?? "ورود ناموفق بود.");
       }
 
-      // ذخیره توکن در localStorage (برای استفاده بعدی)
-      if (data.token) {
-        localStorage.setItem("auth_token", data.token);
+      // ذخیره توکن‌ها و اطلاعات کاربر
+      if (data.data) {
+        const tokens = {
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
+          expiresIn: data.data.expiresIn,
+          refreshExpiresIn: data.data.refreshExpiresIn,
+        };
+        localStorage.setItem("auth_tokens", JSON.stringify(tokens));
+        localStorage.setItem("auth_user", JSON.stringify(data.data.user));
       }
 
       setVerifyMessage({ type: "success", text: "ورود موفق بود. در حال انتقال..." });
@@ -148,7 +155,7 @@ export default function AuthPreviewPage() {
 
         <div className="grid items-start gap-8 md:grid-cols-2">
           <div className="relative">
-            <div className="absolute -top-6 left-6 rounded-full bg-sky-500 px-4 py-1 text-xs font-semibold text-white shadow-soft">
+            <div className="absolute -top-6 left-6 rounded-full bg-gradient-primary px-4 py-1 text-xs font-semibold text-white shadow-soft-primary">
               گام ۱ — درخواست کد
             </div>
             <OTPCard
