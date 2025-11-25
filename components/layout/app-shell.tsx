@@ -24,11 +24,11 @@ type NavItem = {
 };
 
 const ALL_NAV_ITEMS: NavItem[] = [
-  { name: "داشبورد", href: "/dashboard", badge: "جدید" },
-  { name: "مشتریان", href: "/dashboard/customers", badge: "112" },
-  { name: "بازاریاب‌ها", href: "/dashboard/marketers", badge: "12", requiredPermission: "marketers:read" },
+  { name: "داشبورد", href: "/dashboard" },
+  { name: "مشتریان", href: "/dashboard/customers" },
+  { name: "بازاریاب‌ها", href: "/dashboard/marketers", requiredPermission: "marketers:read" },
   { name: "ویزیت‌ها", href: "/dashboard/visits", requiredPermission: "visits:read" },
-  { name: "پیش‌فاکتورها", href: "/dashboard/invoices", badge: "5 جدید", requiredPermission: "invoices:read" },
+  { name: "پیش‌فاکتورها", href: "/dashboard/invoices", requiredPermission: "invoices:read" },
   { name: "پیامک‌ها", href: "/dashboard/sms" },
   { name: "گزارش‌ها", href: "/dashboard/reports", requiredPermission: "reports:read" },
   { name: "تنظیمات", href: "/dashboard/settings", allowedRoles: ["SUPER_ADMIN"] },
@@ -94,21 +94,21 @@ export function AppShell({
   );
 
   const sidebar = (
-    <aside className="flex w-full flex-col gap-6 rounded-3xl bg-white backdrop-blur-sm border-2 border-slate-300 p-6 shadow-md lg:w-64">
-      <header className="flex items-center justify-between">
+    <aside className="flex w-full flex-col gap-6 rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg lg:w-64">
+      <header className="flex items-center justify-between rounded-2xl border-2 border-primary-200 bg-primary-50 p-4">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">TamirBan CRM</span>
-          <span className="text-lg font-semibold text-slate-800">تعمیربان</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-primary-600">TamirBan CRM</span>
+          <span className="text-xl font-bold text-slate-800">تعمیربان</span>
         </div>
         <span
           style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-          className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-500/20"
+          className="inline-flex items-center justify-center rounded-full border-2 border-primary-400 px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-500/30"
         >
           v0.1
         </span>
       </header>
 
-      <nav className="flex flex-col">
+      <nav className="flex flex-col gap-1">
         {filteredNavItems.map((item) => {
           const isActive = activeHref === item.href;
           return (
@@ -117,10 +117,10 @@ export function AppShell({
               href={item.href}
               style={isActive ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : undefined}
               className={[
-                "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                "flex items-center justify-between rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200",
                 isActive 
-                  ? "text-white shadow-md shadow-blue-500/20" 
-                  : "text-slate-800 hover:bg-primary-100/60 focus:bg-primary-100/60 font-medium",
+                  ? "border-primary-400 text-white shadow-md shadow-blue-500/20" 
+                  : "border-transparent text-slate-800 hover:border-primary-200 hover:bg-primary-50 focus:bg-primary-50",
               ].join(" ")}
             >
               <span>{item.name}</span>
@@ -139,18 +139,51 @@ export function AppShell({
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-primary-50 border border-primary-100 p-5">
+      <div className="mt-auto flex flex-col gap-4 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-md">
         {user ? (
           <>
-            <div className="flex flex-col gap-1">
-              <p className="text-xs text-primary-600 font-medium">کاربر فعلی</p>
-              <p className="text-sm font-semibold text-slate-800">{user.mobile}</p>
-              <p className="text-xs text-slate-600">نقش: {user.role}</p>
+            <div className="flex items-center gap-3 rounded-xl border-2 border-primary-200 bg-primary-50 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-md">
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-primary-600">کاربر فعلی</p>
+                <p className="truncate text-sm font-bold text-slate-800">{user.mobile}</p>
+                <p className="text-xs font-medium text-slate-600">
+                  نقش: <span className="font-semibold text-primary-700">{user.role}</span>
+                </p>
+              </div>
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-full bg-primary-500 px-4 py-2 text-xs font-medium text-white transition hover:bg-primary-600 shadow-sm"
+              className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-red-500 bg-gradient-to-r from-red-100 to-red-200 px-5 py-3 text-sm font-bold text-red-900 transition hover:from-red-200 hover:to-red-300 hover:border-red-600 hover:text-red-950 shadow-md hover:shadow-lg"
+              style={{ color: '#991b1b' }}
             >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
               خروج از حساب
             </button>
           </>

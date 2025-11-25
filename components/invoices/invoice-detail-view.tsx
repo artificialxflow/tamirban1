@@ -1,7 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
+import { InvoiceStatusChangeModal } from "./invoice-status-change-modal";
+import { InvoiceEditModal } from "./invoice-edit-modal";
+import { ProtectedComponent } from "@/components/common/protected-component";
 import type { InvoiceDetail } from "@/lib/services/invoices.service";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
@@ -41,6 +45,88 @@ interface InvoiceDetailViewProps {
 
 export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
   const router = useRouter();
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [customers, setCustomers] = useState<Array<{ id: string; name: string }>>([]);
+  const [marketers, setMarketers] = useState<Array<{ id: string; name: string }>>([]);
+
+  useEffect(() => {
+    // بارگذاری لیست مشتریان و بازاریاب‌ها
+    const loadData = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
+
+        // بارگذاری مشتریان
+        const customersRes = await fetch("/api/customers?limit=1000", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (customersRes.ok) {
+          const customersData = await customersRes.json();
+          if (customersData.success) {
+            setCustomers(
+              customersData.data.data.map((c: any) => ({
+                id: c._id,
+                name: c.displayName || "مشتری ناشناس",
+              })),
+            );
+          }
+        }
+
+        // بارگذاری بازاریاب‌ها
+        const marketersRes = await fetch("/api/marketers?limit=1000", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (marketersRes.ok) {
+          const marketersData = await marketersRes.json();
+          if (marketersData.success) {
+            setMarketers(
+              marketersData.data.data.map((m: any) => ({
+                id: m.id,
+                name: m.fullName,
+              })),
+            );
+          }
+        }
+      } catch (err) {
+        console.error("خطا در بارگذاری داده‌ها:", err);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        alert("لطفاً ابتدا وارد شوید.");
+        return;
+      }
+
+      const response = await fetch(`/api/invoices/${invoice._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "خطا در حذف پیش‌فاکتور");
+      }
+
+      router.push("/dashboard/invoices");
+    } catch (err) {
+      alert("خطا در حذف پیش‌فاکتور: " + (err instanceof Error ? err.message : "خطای ناشناخته"));
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     const stored = localStorage.getItem("auth_tokens");
@@ -106,15 +192,17 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
       description={`شماره پیش‌فاکتور: ${(invoice.meta?.invoiceNumber as string) || invoice._id}`}
       activeHref="/dashboard/invoices"
       actions={
-        <button
-          onClick={handleDownloadPDF}
-          className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30"
-          style={{
-            background: "linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(37, 99, 235) 100%)",
-          }}
-        >
-          دانلود PDF
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30"
+            style={{
+              background: "linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(37, 99, 235) 100%)",
+            }}
+          >
+            دانلود PDF
+          </button>
+        </div>
       }
     >
       <div className="flex flex-col gap-6">
@@ -238,16 +326,93 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
           </div>
         </div>
 
-        {/* Back Button */}
-        <div className="flex justify-end">
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3">
           <button
             onClick={() => router.push("/dashboard/invoices")}
             className="rounded-full border-2 border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700 shadow-md"
           >
             بازگشت به لیست
           </button>
+          <ProtectedComponent permission="invoices:write">
+            <button
+              onClick={() => setShowStatusModal(true)}
+              className="rounded-full border-2 border-primary-300 bg-primary-100 px-5 py-2.5 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
+            >
+              تغییر وضعیت
+            </button>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="rounded-full border-2 border-primary-300 bg-primary-100 px-5 py-2.5 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
+            >
+              ویرایش
+            </button>
+          </ProtectedComponent>
+          <ProtectedComponent permission="invoices:delete">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="rounded-full border-2 border-red-300 bg-red-100 px-5 py-2.5 text-sm font-semibold text-red-800 transition hover:border-red-400 hover:bg-red-200 hover:text-red-900 shadow-md"
+            >
+              حذف
+            </button>
+          </ProtectedComponent>
         </div>
       </div>
+
+      {/* Modals */}
+      {showStatusModal && (
+        <InvoiceStatusChangeModal
+          invoice={invoice}
+          isOpen={showStatusModal}
+          onClose={() => setShowStatusModal(false)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
+
+      {showEditModal && (
+        <InvoiceEditModal
+          invoice={invoice}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          customers={customers}
+          marketers={marketers}
+          onSuccess={() => router.refresh()}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-3xl border-2 border-slate-300 bg-white shadow-xl">
+            <div className="border-b-2 border-slate-300 bg-slate-100 px-6 py-4">
+              <h2 className="text-lg font-semibold text-slate-800">تایید حذف پیش‌فاکتور</h2>
+            </div>
+            <div className="p-6">
+              <p className="mb-4 text-sm text-slate-700">
+                آیا مطمئن هستید که می‌خواهید این پیش‌فاکتور را حذف کنید؟
+              </p>
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                <strong>توجه:</strong> این عملیات غیرقابل برگشت است.
+              </div>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="rounded-full border-2 border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-full border-2 border-red-300 bg-red-100 px-5 py-2.5 text-sm font-semibold text-red-800 transition hover:border-red-400 hover:bg-red-200 disabled:opacity-50"
+                >
+                  {deleting ? "در حال حذف..." : "تایید حذف"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

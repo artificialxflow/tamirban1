@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { invoiceId } = await params;
     const payload = await request.json();
-    const { status, paidAt } = payload;
+    const { status, paidAt, paymentReference } = payload;
 
     if (!status || !INVOICE_STATUSES.includes(status)) {
       return NextResponse.json(
@@ -39,6 +39,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       invoiceId,
       status as InvoiceStatus,
       paidAt ? new Date(paidAt) : undefined,
+      paymentReference,
     );
     return successResponse(invoice, "وضعیت پیش‌فاکتور با موفقیت تغییر کرد.");
   } catch (error) {

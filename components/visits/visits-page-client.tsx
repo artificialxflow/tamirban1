@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -8,7 +8,12 @@ import { VisitFilters } from "./visit-filters";
 import { VisitList } from "./visit-list";
 import { VisitPagination } from "./visit-pagination";
 import { VisitCreateModal } from "./visit-create-modal";
+import { VisitDetailModal } from "./visit-detail-modal";
+import { VisitEditModal } from "./visit-edit-modal";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { apiClient } from "@/lib/utils/api-client";
 import type { VisitSummary } from "@/lib/services/visits.service";
+import type { VisitDetail } from "@/lib/services/visits.service";
 import type { VisitSummaryCard, VisitReminder } from "@/lib/services/visits.service";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
@@ -33,14 +38,78 @@ export function VisitsPageClient({
 }: VisitsPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+  const [editingVisit, setEditingVisit] = useState<VisitDetail | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [visits, setVisits] = useState(initialVisits);
+  const [total, setTotal] = useState(initialTotal);
 
-  const handleSuccess = () => {
+  // به‌روزرسانی state وقتی props تغییر می‌کند
+  useEffect(() => {
+    setVisits(initialVisits);
+    setTotal(initialTotal);
+  }, [initialVisits, initialTotal]);
+
+  // اگر کاربر MARKETER است و marketerId در query params نیست، به صورت خودکار اضافه کن
+  useEffect(() => {
+    if (user?.role === "MARKETER" && !searchParams.get("marketerId")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("marketerId", user._id);
+      router.replace(`/dashboard/visits?${params.toString()}`);
+    }
+  }, [user, searchParams, router]);
+
+  const handleSuccess = async () => {
     // بازگشت به صفحه اول و حفظ فیلترها برای نمایش رکورد جدید در بالای لیست
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", "1");
-    router.push(`/dashboard/visits?${params.toString()}`);
+    
+    // Refresh صفحه برای به‌روزرسانی داده‌ها
+    router.replace(`/dashboard/visits?${params.toString()}`);
     router.refresh();
+  };
+
+  const handleEdit = async (visit: VisitSummary) => {
+    try {
+      const response = await apiClient.get<VisitDetail>(`/visits/${visit.id}`);
+      if (response.success && response.data) {
+        // تبدیل تاریخ‌های string به Date
+        const visitData = {
+          ...response.data,
+          scheduledAt: response.data.scheduledAt instanceof Date 
+            ? response.data.scheduledAt 
+            : new Date(response.data.scheduledAt as string),
+          completedAt: response.data.completedAt 
+            ? (response.data.completedAt instanceof Date 
+                ? response.data.completedAt 
+                : new Date(response.data.completedAt as string))
+            : null,
+        };
+        setEditingVisit(visitData);
+      }
+    } catch (error) {
+      console.error("Error loading visit for edit:", error);
+      alert("خطا در بارگذاری اطلاعات ویزیت برای ویرایش");
+    }
+  };
+
+  const handleDelete = async (visitId: string) => {
+    setIsDeleting(visitId);
+    try {
+      const response = await apiClient.delete(`/visits/${visitId}`);
+      if (response.success) {
+        handleSuccess();
+      } else {
+        alert(response.message || "خطا در حذف ویزیت");
+      }
+    } catch (error) {
+      console.error("Error deleting visit:", error);
+      alert("خطا در حذف ویزیت");
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   return (
@@ -84,11 +153,11 @@ export function VisitsPageClient({
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">برنامه زمانی ویزیت‌ها</h2>
                 <p className="text-xs text-slate-600">
-                  {numberFormatter.format(initialVisits.length)} از {numberFormatter.format(initialTotal)} مورد
+                  {numberFormatter.format(visits.length)} از {numberFormatter.format(total)} مورد
                 </p>
               </div>
             </header>
-            {initialVisits.length === 0 ? (
+            {visits.length === 0 ? (
               <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-12 text-center">
                 <h3 className="text-lg font-semibold text-slate-800">هیچ ویزیتی ثبت نشده است</h3>
                 <p className="mt-2 text-sm text-slate-600">برای شروع، یک ویزیت جدید ثبت کنید.</p>
@@ -108,10 +177,16 @@ export function VisitsPageClient({
                         <th className="px-5 py-3 text-center">عملیات</th>
                       </tr>
                     </thead>
-                    <VisitList visits={initialVisits} />
+                    <VisitList 
+                      visits={visits} 
+                      onVisitClick={(visitId) => setSelectedVisitId(visitId)}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      deletingVisitId={isDeleting}
+                    />
                   </table>
                 </div>
-                <VisitPagination total={initialTotal} page={initialPage} limit={initialLimit} />
+                <VisitPagination total={total} page={initialPage} limit={initialLimit} />
               </>
             )}
           </section>
@@ -143,6 +218,27 @@ export function VisitsPageClient({
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleSuccess}
       />
+      {selectedVisitId && (
+        <VisitDetailModal
+          visitId={selectedVisitId}
+          isOpen={!!selectedVisitId}
+          onClose={() => setSelectedVisitId(null)}
+          onSuccess={() => {
+            handleSuccess(); // Refresh the list after edit/delete
+          }}
+        />
+      )}
+      {editingVisit && (
+        <VisitEditModal
+          visit={editingVisit}
+          isOpen={!!editingVisit}
+          onClose={() => setEditingVisit(null)}
+          onSuccess={() => {
+            setEditingVisit(null);
+            handleSuccess();
+          }}
+        />
+      )}
     </>
   );
 }

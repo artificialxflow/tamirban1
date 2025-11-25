@@ -1,17 +1,12 @@
 import { AppShell } from "@/components/layout/app-shell";
 
 const kpis = [
-  { title: "درآمد ماه جاری", value: "186,400,000 ریال", delta: "+14% نسبت به ماه قبل" },
-  { title: "نرخ تبدیل پیش‌فاکتور", value: "38%", delta: "+6% رشد" },
-  { title: "میانگین زمان پیگیری", value: "1.8 روز", delta: "نیاز به بهبود" },
+  { title: "درآمد ماه جاری", value: "0 ریال", delta: "داده‌ای موجود نیست" },
+  { title: "نرخ تبدیل پیش‌فاکتور", value: "0%", delta: "داده‌ای موجود نیست" },
+  { title: "میانگین زمان پیگیری", value: "0 روز", delta: "داده‌ای موجود نیست" },
 ];
 
-const timeline = [
-  { label: "هفته اول", value: "۴۵ پیش‌فاکتور", status: "رشد" },
-  { label: "هفته دوم", value: "۳۲ بازدید", status: "پایدار" },
-  { label: "هفته سوم", value: "۱۵ مشتری جدید", status: "رشد" },
-  { label: "هفته چهارم", value: "۹ قرارداد", status: "در انتظار" },
-];
+const timeline: Array<{ label: string; value: string; status: string }> = [];
 
 export default function ReportsPage() {
   return (
@@ -53,15 +48,22 @@ export default function ReportsPage() {
           </div>
           <button className="text-xs font-medium text-primary-600 hover:text-primary-700">مشاهده جزئیات</button>
         </header>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {timeline.map((item) => (
-            <article key={item.label} className="flex flex-col gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700">
-              <span className="text-xs font-medium text-slate-500">{item.label}</span>
-              <span className="text-base font-semibold text-slate-800">{item.value}</span>
-              <span className="text-xs text-primary-700 font-medium">{item.status}</span>
-            </article>
-          ))}
-        </div>
+        {timeline.length > 0 ? (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {timeline.map((item) => (
+              <article key={item.label} className="flex flex-col gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                <span className="text-xs font-medium text-slate-500">{item.label}</span>
+                <span className="text-base font-semibold text-slate-800">{item.value}</span>
+                <span className="text-xs text-primary-700 font-medium">{item.status}</span>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-600">
+            <span>هنوز داده‌ای برای نمایش روند ماهانه ثبت نشده است.</span>
+            <span>با ثبت مشتریان، ویزیت‌ها و پیش‌فاکتورها، این بخش به‌صورت خودکار بروز خواهد شد.</span>
+          </div>
+        )}
       </section>
 
       <section className="rounded-3xl border-2 border-slate-300 bg-white p-6 shadow-sm">

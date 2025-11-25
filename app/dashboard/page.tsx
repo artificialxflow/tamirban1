@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { getDashboardOverview } from "@/lib/services/dashboard.service";
+import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 
 const STAT_TONE_CLASS: Record<string, string> = {
   positive: "text-emerald-500",
@@ -33,19 +34,7 @@ export default async function DashboardPage() {
       title="داشبورد مدیریتی"
       description="نمای کلی عملکرد روزانه شامل مشتریان فعال، برنامه ویزیت و پیش‌فاکتورهای معوق."
       activeHref="/dashboard"
-      actions={
-        <>
-          <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
-            گزارش لحظه‌ای
-          </button>
-          <button
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50"
-          >
-            ثبت مشتری جدید
-          </button>
-        </>
-      }
+      actions={<DashboardActions />}
       toolbar={
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[220px] md:max-w-sm">

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import type { VisitStatus } from "@/lib/types";
+import { PersianDatePicker } from "./persian-date-picker";
 
 const STATUS_OPTIONS: { value: VisitStatus | ""; label: string }[] = [
   { value: "", label: "همه وضعیت‌ها" },
@@ -72,19 +73,17 @@ export function VisitFilters() {
           </option>
         ))}
       </select>
-      <input
-        type="date"
-        placeholder="از تاریخ"
+      <PersianDatePicker
         value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+        onChange={(value) => setStartDate(value)}
+        placeholder="از تاریخ"
+        className="flex-1 min-w-[220px] md:max-w-sm"
       />
-      <input
-        type="date"
-        placeholder="تا تاریخ"
+      <PersianDatePicker
         value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+        onChange={(value) => setEndDate(value)}
+        placeholder="تا تاریخ"
+        className="flex-1 min-w-[220px] md:max-w-sm"
       />
       <button
         onClick={handleFilter}

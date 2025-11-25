@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // پشتیبانی از Service Worker
+  async rewrites() {
+    return [
+      {
+        source: "/sw.js",
+        destination: "/sw.js",
+      },
+    ];
+  },
   async headers() {
     return [
       {

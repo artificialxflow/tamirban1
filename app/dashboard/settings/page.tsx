@@ -127,16 +127,24 @@ export default function SettingsPreviewPage() {
                 <h2 className="text-lg font-semibold text-slate-800">مدیریت نقش‌ها</h2>
                 <p className="text-xs text-slate-600">تعریف نقش‌ها و کاربرانی که به آنها تخصیص یافته‌اند</p>
               </div>
-              <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
-                افزودن نقش جدید
-              </button>
+              <a
+                href="/dashboard/settings/roles"
+                className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
+              >
+                مدیریت نقش‌ها
+              </a>
             </header>
             <ul className="flex flex-col divide-y divide-slate-200">
               {roles.map((role) => (
                 <li key={role.name} className="flex flex-col gap-3 px-6 py-5">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-slate-800">{role.name}</h3>
-                    <button className="text-xs font-medium text-primary-600 hover:text-primary-700">ویرایش دسترسی‌ها</button>
+                    <a
+                      href="/dashboard/settings/roles"
+                      className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                    >
+                      ویرایش دسترسی‌ها
+                    </a>
                   </div>
                   <p className="text-xs text-slate-600">{role.permissions}</p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-500">

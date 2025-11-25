@@ -29,6 +29,7 @@ export async function createCustomerAction(
 
     await createCustomer(payload);
     revalidatePath("/dashboard/customers");
+    revalidatePath("/dashboard"); // Also refresh dashboard
 
     return {
       success: true,

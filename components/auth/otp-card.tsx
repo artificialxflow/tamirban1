@@ -100,7 +100,7 @@ export function OTPCard({
   };
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl bg-white/95 p-8 shadow-soft backdrop-blur">
+    <div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border-2 border-slate-200 bg-white/95 p-8 shadow-lg shadow-slate-200/50 backdrop-blur">
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-3 text-sm font-semibold text-primary-600">
           <span className="inline-flex h-2 w-2 rounded-full bg-primary-500" />
@@ -172,7 +172,7 @@ export function OTPCard({
                     value={digit}
                     maxLength={1}
                     dir="ltr"
-                    className="h-14 w-14 rounded-2xl border border-slate-200 text-center text-lg font-semibold text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                    className="h-14 w-14 rounded-2xl border-2 border-slate-300 bg-white text-center text-lg font-semibold text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100 shadow-sm"
                     onChange={handleDigitChange(index)}
                     onKeyDown={handleDigitKeyDown(index)}
                     onPaste={index === 0 ? handleDigitPaste : undefined}

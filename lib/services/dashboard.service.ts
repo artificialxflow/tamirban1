@@ -53,9 +53,12 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const usersCollection = await getUsersCollection();
 
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const localYear = now.getFullYear();
+  const localMonth = now.getMonth();
+  const localDate = now.getDate();
+  const startOfMonth = new Date(Date.UTC(localYear, localMonth, 1, 0, 0, 0, 0));
+  const startOfDay = new Date(Date.UTC(localYear, localMonth, localDate, 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(localYear, localMonth, localDate + 1, 0, 0, 0, 0));
 
   const [
     totalCustomers,

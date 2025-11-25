@@ -4,16 +4,12 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useState } from "react";
 
 const smsStats = [
-  { label: "پیامک‌های ارسال شده", value: "1,245", helper: "+8% نسبت به هفته قبل" },
-  { label: "نرخ تحویل", value: "92%", helper: "۵ پیامک در انتظار" },
-  { label: "هزینه ماه جاری", value: "48,750,000 ریال", helper: "در محدوده بودجه" },
+  { label: "پیامک‌های ارسال شده", value: "0", helper: "هنوز پیامکی ارسال نشده است" },
+  { label: "نرخ تحویل", value: "0%", helper: "داده‌ای موجود نیست" },
+  { label: "هزینه ماه جاری", value: "0 ریال", helper: "هزینه‌ای ثبت نشده است" },
 ];
 
-const smsCampaigns = [
-  { title: "کمپین خوش‌آمدگویی", status: "فعال", sent: "320 پیامک", date: "12 مهر" },
-  { title: "یادآوری سرویس دوره‌ای", status: "زمان‌بندی شده", sent: "210 پیامک", date: "15 مهر" },
-  { title: "پیگیری تسویه حساب", status: "اتمام", sent: "156 پیامک", date: "9 مهر" },
-];
+const smsCampaigns: Array<{ title: string; status: string; sent: string; date: string }> = [];
 
 export default function SmsPage() {
   const [showMessage, setShowMessage] = useState(false);
@@ -80,22 +76,29 @@ export default function SmsPage() {
           </div>
           <button className="text-xs font-medium text-primary-600 hover:text-primary-700">مشاهده گزارش کامل</button>
         </header>
-        <ul className="mt-4 flex flex-col gap-3">
-          {smsCampaigns.map((campaign) => (
-            <li
-              key={campaign.title}
-              className="flex flex-col gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="font-semibold text-slate-800">{campaign.title}</span>
-                <span className="text-xs text-slate-600">{campaign.sent} · آخرین آپدیت {campaign.date}</span>
-              </div>
-              <span className="inline-flex items-center justify-center rounded-full bg-white border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700">
-                {campaign.status}
-              </span>
-            </li>
-          ))}
-        </ul>
+        {smsCampaigns.length > 0 ? (
+          <ul className="mt-4 flex flex-col gap-3">
+            {smsCampaigns.map((campaign) => (
+              <li
+                key={campaign.title}
+                className="flex flex-col gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold text-slate-800">{campaign.title}</span>
+                  <span className="text-xs text-slate-600">{campaign.sent} · آخرین آپدیت {campaign.date}</span>
+                </div>
+                <span className="inline-flex items-center justify-center rounded-full bg-white border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700">
+                  {campaign.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-600">
+            <span>هنوز کمپین پیامکی ثبت نشده است.</span>
+            <span>با ایجاد کمپین جدید، این بخش به‌صورت خودکار بروز خواهد شد.</span>
+          </div>
+        )}
       </section>
       </AppShell>
     </>

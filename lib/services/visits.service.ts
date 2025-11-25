@@ -70,24 +70,64 @@ function resolveHelperColor(tone: "info" | "success" | "warning" | "neutral") {
   }
 }
 
-export async function getVisitsOverview(): Promise<VisitsOverview> {
-  const visitsCollection = await getVisitsCollection();
-  const customersCollection = await getCustomersCollection();
-  const usersCollection = await getUsersCollection();
+export async function getVisitsOverview(currentUserId?: string, currentUserRole?: string): Promise<VisitsOverview> {
+  try {
+    const visitsCollection = await getVisitsCollection();
+    const customersCollection = await getCustomersCollection();
+    const usersCollection = await getUsersCollection();
 
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const now = new Date();
+    // ساخت startOfDay و endOfDay
+    // تاریخ‌ها در MongoDB به صورت UTC ذخیره می‌شوند (از toISOString())
+    // باید از local date برای ساخت startOfDay و endOfDay استفاده کنیم
+    // اما MongoDB query با Date object کار می‌کند و خودش timezone را مدیریت می‌کند
+    const localYear = now.getFullYear();
+    const localMonth = now.getMonth();
+    const localDate = now.getDate();
+    
+    // ساخت Date با local timezone برای start of day
+    // MongoDB این Date object را به UTC تبدیل می‌کند و با تاریخ‌های ذخیره شده مقایسه می‌کند
+    const startOfDay = new Date(localYear, localMonth, localDate, 0, 0, 0, 0);
+    const endOfDay = new Date(localYear, localMonth, localDate + 1, 0, 0, 0, 0);
+    
+    // برای اطمینان از match شدن، از range وسیع‌تری استفاده می‌کنیم
+    // که شامل کل روز در هر timezone باشد (24 ساعت + offset)
+    const timezoneOffset = now.getTimezoneOffset() * 60000; // به میلی‌ثانیه
+    const startOfDayAdjusted = new Date(startOfDay.getTime() - timezoneOffset);
+    const endOfDayAdjusted = new Date(endOfDay.getTime() - timezoneOffset);
 
-  const [todayVisits, completedTodayCount, cancelledTodayCount, allTodayVisitsCount, averageDurations] = await Promise.all([
+    // فیلتر بر اساس نقش کاربر
+    // استفاده از adjusted dates برای اطمینان از match شدن با تاریخ‌های UTC
+    const baseQuery: Record<string, unknown> = { scheduledAt: { $gte: startOfDayAdjusted, $lt: endOfDayAdjusted } };
+    
+    // اگر currentUserId پاس داده شده (چه از MARKETER باشد چه از فیلتر دستی)، فیلتر کن
+    if (currentUserId) {
+      baseQuery.marketerId = currentUserId;
+    }
+    // اگر currentUserId نباشد، همه ویزیت‌های امروز را نشان بده
+
+    // Debug: لاگ برای بررسی query (فقط در development)
+    if (process.env.NODE_ENV === "development") {
+      console.log("[getVisitsOverview] Query:", {
+        startOfDay: startOfDay.toISOString(),
+        endOfDay: endOfDay.toISOString(),
+        startOfDayAdjusted: startOfDayAdjusted.toISOString(),
+        endOfDayAdjusted: endOfDayAdjusted.toISOString(),
+        timezoneOffset: now.getTimezoneOffset(),
+        currentUserId,
+        baseQueryKeys: Object.keys(baseQuery),
+      });
+    }
+
+    const [todayVisits, completedTodayCount, cancelledTodayCount, allTodayVisitsCount, averageDurations] = await Promise.all([
     visitsCollection
-      .find({ scheduledAt: { $gte: startOfDay, $lt: endOfDay } })
+      .find(baseQuery)
       .sort({ scheduledAt: 1 })
       .limit(20)
       .toArray(),
-    visitsCollection.countDocuments({ status: "COMPLETED", completedAt: { $gte: startOfDay, $lt: endOfDay } }),
-    visitsCollection.countDocuments({ status: "CANCELLED", scheduledAt: { $gte: startOfDay, $lt: endOfDay } }),
-    visitsCollection.countDocuments({ scheduledAt: { $gte: startOfDay, $lt: endOfDay } }),
+    visitsCollection.countDocuments({ ...baseQuery, status: "COMPLETED", completedAt: { $gte: startOfDayAdjusted, $lt: endOfDayAdjusted } }),
+    visitsCollection.countDocuments({ ...baseQuery, status: "CANCELLED" }),
+    visitsCollection.countDocuments(baseQuery),
     visitsCollection
       .aggregate([
         { $match: { status: "COMPLETED", completedAt: { $exists: true }, scheduledAt: { $exists: true } } },
@@ -159,8 +199,14 @@ export async function getVisitsOverview(): Promise<VisitsOverview> {
     followUpLabel: visit.followUpAction,
   }));
 
+  // فیلتر برای ویزیت‌های آینده
+  const futureQuery: Record<string, unknown> = { scheduledAt: { $gte: endOfDay } };
+  if (currentUserId) {
+    futureQuery.marketerId = currentUserId;
+  }
+
   const futureVisits = await visitsCollection
-    .find({ scheduledAt: { $gte: endOfDay } })
+    .find(futureQuery)
     .sort({ scheduledAt: 1 })
     .limit(5)
     .toArray();
@@ -172,15 +218,55 @@ export async function getVisitsOverview(): Promise<VisitsOverview> {
     owner: visit.marketerId ? marketerNameMap.get(visit.marketerId) : undefined,
   }));
 
-  if (!reminders.length) {
-    reminders.push({
-      id: "reminder-empty",
-      title: "ثبت یادآوری جدید",
-      deadlineLabel: "برای مدیریت بهتر برنامه، یادآوری ایجاد کنید.",
-    });
-  }
+    if (!reminders.length) {
+      reminders.push({
+        id: "reminder-empty",
+        title: "ثبت یادآوری جدید",
+        deadlineLabel: "برای مدیریت بهتر برنامه، یادآوری ایجاد کنید.",
+      });
+    }
 
-  return { summaryCards, reminders, schedule };
+    return { summaryCards, reminders, schedule };
+  } catch (error) {
+    console.error("[getVisitsOverview] Error:", error);
+    // در صورت خطا، یک response خالی برگردان
+    return {
+      summaryCards: [
+        {
+          title: "ویزیت‌های امروز",
+          value: "0",
+          helper: "خطا در اتصال به دیتابیس",
+          helperColor: "text-rose-500",
+        },
+        {
+          title: "تکمیل شده",
+          value: "0",
+          helper: "خطا در اتصال به دیتابیس",
+          helperColor: "text-rose-500",
+        },
+        {
+          title: "لغو شده",
+          value: "0",
+          helper: "خطا در اتصال به دیتابیس",
+          helperColor: "text-rose-500",
+        },
+        {
+          title: "میانگین زمان",
+          value: "0 دقیقه",
+          helper: "خطا در اتصال به دیتابیس",
+          helperColor: "text-rose-500",
+        },
+      ],
+      reminders: [
+        {
+          id: "error",
+          title: "خطا در اتصال به دیتابیس",
+          deadlineLabel: "لطفاً اتصال اینترنت و تنظیمات دیتابیس را بررسی کنید.",
+        },
+      ],
+      schedule: [],
+    };
+  }
 }
 
 // Schemas

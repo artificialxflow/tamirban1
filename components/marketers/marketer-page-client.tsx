@@ -73,8 +73,8 @@ export function MarketerPageClient({
     await handleRefresh();
   };
 
-  // Calculate average conversion (mock for now)
-  const avgConversion = marketers.length > 0 ? Math.round((marketers.reduce((sum, m) => sum + m.assignedCustomersCount, 0) / marketers.length) * 1.2) : 0;
+  // Calculate average conversion (based on real data)
+  const avgConversion = 0; // Will be calculated from real data when available
 
   return (
     <>
@@ -125,7 +125,7 @@ export function MarketerPageClient({
                 <span className="text-xs text-white/80">میانگین نرخ تبدیل تیم</span>
                 <span className="text-2xl font-semibold">{numberFormatter.format(avgConversion)}٪</span>
               </div>
-              <div className="text-xs text-emerald-300 font-medium">+۵٪ نسبت به ماه قبل</div>
+              <div className="text-xs text-white/60 font-medium">داده‌ای موجود نیست</div>
             </div>
           </div>
         }
@@ -202,8 +202,8 @@ export function MarketerPageClient({
                 کمپین جاری
               </span>
             </header>
-            <p className="text-sm text-slate-200">۶۸ مشتری هدف</p>
-            <p className="text-xs text-slate-400">پیگیری بازخورد بازاریاب‌ها تا ۲۰ آبان</p>
+            <p className="text-sm text-slate-200">0 مشتری هدف</p>
+            <p className="text-xs text-slate-400">کمپین فعالی ثبت نشده است</p>
             <footer className="mt-4 flex items-center gap-3 text-xs text-slate-300">
               <button className="rounded-full bg-white/10 px-4 py-2 transition hover:bg-white/20">
                 مشاهده جزئیات
@@ -221,8 +221,8 @@ export function MarketerPageClient({
                 کمپین جاری
               </span>
             </header>
-            <p className="text-sm text-slate-200">۵۴ مشتری ویژه</p>
-            <p className="text-xs text-slate-400">ارسال گزارش جمع‌بندی تا ۲۵ آبان</p>
+            <p className="text-sm text-slate-200">0 مشتری ویژه</p>
+            <p className="text-xs text-slate-400">کمپین فعالی ثبت نشده است</p>
             <footer className="mt-4 flex items-center gap-3 text-xs text-slate-300">
               <button className="rounded-full bg-white/10 px-4 py-2 transition hover:bg-white/20">
                 مشاهده جزئیات

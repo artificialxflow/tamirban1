@@ -2,7 +2,6 @@ import { listVisits, getVisitsOverview } from "@/lib/services/visits.service";
 import { VisitsPageClient } from "@/components/visits/visits-page-client";
 import type { VisitStatus } from "@/lib/types";
 
-
 type VisitsPageProps = {
   searchParams: Promise<{
     customerId?: string;
@@ -19,6 +18,7 @@ export default async function VisitsPage({ searchParams }: VisitsPageProps) {
   const page = params.page ? parseInt(params.page, 10) : 1;
   const limit = 20;
 
+  // فیلتر اولیه - اگر marketerId در params است، از آن استفاده کن
   const [result, overview] = await Promise.all([
     listVisits({
       customerId: params.customerId,
@@ -29,7 +29,9 @@ export default async function VisitsPage({ searchParams }: VisitsPageProps) {
       page,
       limit,
     }),
-    getVisitsOverview(),
+    // اگر marketerId در params است، آن را به عنوان currentUserId پاس بده (برای فیلتر)
+    // اما currentUserRole را undefined بگذار تا همه ویزیت‌های امروز را نشان دهد (فقط با فیلتر marketerId)
+    getVisitsOverview(params.marketerId, undefined),
   ]);
 
   return (

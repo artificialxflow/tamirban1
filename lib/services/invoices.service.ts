@@ -469,15 +469,22 @@ export async function changeInvoiceStatus(
   invoiceId: string,
   status: InvoiceStatus,
   paidAt?: Date,
+  paymentReference?: string,
 ): Promise<Invoice> {
   const updateData: Partial<Invoice> = {
     status,
     updatedAt: new Date(),
   };
 
-  if (status === "PAID" && paidAt) {
-    updateData.paidAt = paidAt;
-  } else if (status !== "PAID") {
+  if (status === "PAID") {
+    if (paidAt) {
+      updateData.paidAt = paidAt;
+    }
+    if (paymentReference !== undefined) {
+      updateData.paymentReference = paymentReference || undefined;
+    }
+  } else {
+    // برای وضعیت‌های غیر از PAID، paidAt را پاک می‌کنیم
     updateData.paidAt = undefined;
   }
 
