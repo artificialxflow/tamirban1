@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -54,7 +54,6 @@ export function AppShell({
   footerNote,
 }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, logout } = useAuth();
   const { hasPermission, hasRole } = usePermissions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

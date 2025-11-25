@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { listVisits, createVisit } from "@/lib/services/visits.service";
 import { requirePermission } from "@/lib/middleware/rbac";

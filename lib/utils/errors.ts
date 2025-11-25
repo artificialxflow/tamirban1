@@ -47,14 +47,16 @@ export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
  * کلاس خطای سفارشی برای API
  */
 export class ApiException extends Error {
-  constructor(
-    public message: string,
-    public statusCode: number = 400,
-    public code?: ApiErrorCode | string,
-    public errors?: Array<{ field: string; message: string }>,
-  ) {
+  public statusCode: number;
+  public code?: ApiErrorCode | string;
+  public errors?: Array<{ field: string; message: string }>;
+
+  constructor(message: string, statusCode: number = 400, code?: ApiErrorCode | string, errors?: Array<{ field: string; message: string }>) {
     super(message);
     this.name = "ApiException";
+    this.statusCode = statusCode;
+    this.code = code;
+    this.errors = errors;
   }
 
   toResponse(): NextResponse<ApiError> {

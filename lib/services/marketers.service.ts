@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { usersRepository } from "@/lib/repositories/users.repository";
 import { marketersRepository } from "@/lib/repositories/marketers.repository";
-import type { User, MarketerProfile, RoleKey } from "@/lib/types";
+import type { User, RoleKey } from "@/lib/types";
 import { normalizePhone } from "@/lib/utils/phone";
 
 // Schemas

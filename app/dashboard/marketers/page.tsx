@@ -1,5 +1,4 @@
 import { listMarketers } from "@/lib/services/marketers.service";
-import { AppShell } from "@/components/layout/app-shell";
 import { MarketerPageClient } from "@/components/marketers/marketer-page-client";
 
 type MarketersPageProps = {

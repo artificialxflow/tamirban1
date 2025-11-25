@@ -3,12 +3,6 @@
  * مستندات: https://ippanelcom.github.io/Edge-Document/docs/send/webservice
  */
 
-interface TabaanSmsConfig {
-  baseUrl: string;
-  apiKey: string;
-  senderNumber: string;
-}
-
 interface SendSmsParams {
   phone: string; // شماره گیرنده (فرمت: 09123456789)
   message: string; // متن پیامک

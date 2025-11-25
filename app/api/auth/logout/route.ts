@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { invalidateRefreshToken } from "@/lib/services/auth.service";
 import { authenticateRequest } from "@/lib/middleware/auth";

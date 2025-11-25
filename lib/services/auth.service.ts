@@ -2,8 +2,7 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
 import { getUsersCollection } from "@/lib/db/collections";
-import { issueJwt, verifyJwt } from "@/lib/utils/jwt";
-import type { AuthTokenPayload } from "@/lib/types";
+import { issueJwt } from "@/lib/utils/jwt";
 
 const ACCESS_TOKEN_EXPIRES_IN = "1h"; // 1 ساعت
 const REFRESH_TOKEN_EXPIRES_IN = "7d"; // 7 روز

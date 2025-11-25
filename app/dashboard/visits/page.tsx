@@ -31,7 +31,7 @@ export default async function VisitsPage({ searchParams }: VisitsPageProps) {
     }),
     // اگر marketerId در params است، آن را به عنوان currentUserId پاس بده (برای فیلتر)
     // اما currentUserRole را undefined بگذار تا همه ویزیت‌های امروز را نشان دهد (فقط با فیلتر marketerId)
-    getVisitsOverview(params.marketerId, undefined),
+    getVisitsOverview(params.marketerId),
   ]);
 
   return (

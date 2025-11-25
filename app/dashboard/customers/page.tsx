@@ -1,7 +1,6 @@
 import type { CustomerStatus } from "@/lib/types";
 import { getCustomerDetail, listCustomerSummaries } from "@/lib/services/customers.service";
 import { AppShell } from "@/components/layout/app-shell";
-import { CustomerCreateForm } from "@/components/customers/customer-create-form";
 import { CustomerList } from "@/components/customers/customer-list";
 import { CustomerFilters } from "@/components/customers/customer-filters";
 import { CustomerPagination } from "@/components/customers/customer-pagination";

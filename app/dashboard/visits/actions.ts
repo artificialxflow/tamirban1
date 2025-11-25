@@ -33,6 +33,19 @@ export async function createVisitAction(
       };
     }
 
+    const locationLatitude = formData.get("locationLatitude") as string;
+    const locationLongitude = formData.get("locationLongitude") as string;
+    const locationAddress = formData.get("locationAddress") as string;
+
+    const locationSnapshot =
+      locationLatitude && locationLongitude
+        ? {
+            latitude: parseFloat(locationLatitude),
+            longitude: parseFloat(locationLongitude),
+            address: locationAddress || undefined,
+          }
+        : undefined;
+
     const payload = {
       customerId,
       marketerId,
@@ -40,6 +53,7 @@ export async function createVisitAction(
       notes: notes || undefined,
       topics: topics ? topics.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
       followUpAction: followUpAction || undefined,
+      locationSnapshot,
     };
 
     await createVisit(payload);
@@ -82,6 +96,19 @@ export async function updateVisitAction(
       };
     }
 
+    const locationLatitude = formData.get("locationLatitude") as string;
+    const locationLongitude = formData.get("locationLongitude") as string;
+    const locationAddress = formData.get("locationAddress") as string;
+
+    const locationSnapshot =
+      locationLatitude && locationLongitude
+        ? {
+            latitude: parseFloat(locationLatitude),
+            longitude: parseFloat(locationLongitude),
+            address: locationAddress || undefined,
+          }
+        : undefined;
+
     const payload = {
       customerId,
       marketerId,
@@ -89,6 +116,7 @@ export async function updateVisitAction(
       notes: notes || undefined,
       topics: topics ? topics.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
       followUpAction: followUpAction || undefined,
+      locationSnapshot,
     };
 
     await updateVisit(visitId, payload);

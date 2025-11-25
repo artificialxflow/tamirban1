@@ -19,11 +19,14 @@ function formatDate(value?: Date | null) {
 }
 
 function getInitials(name: string): string {
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return (parts[0][0] || "") + (parts[1][0] || "");
+  if (!name) {
+    return "";
   }
-  return name.substring(0, 2).toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const second = parts[1]?.[0] ?? "";
+  const initials = `${first}${second}`.toUpperCase();
+  return initials || name.substring(0, 2).toUpperCase();
 }
 
 function getStatusBadgeClass(isActive: boolean) {

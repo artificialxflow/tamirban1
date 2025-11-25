@@ -1,8 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { InvoiceList } from "@/components/invoices/invoice-list";
-import { InvoiceFilters } from "@/components/invoices/invoice-filters";
-import { InvoicePagination } from "@/components/invoices/invoice-pagination";
-import { InvoiceCreateModal } from "@/components/invoices/invoice-create-modal";
 import { InvoicesPageClient } from "@/components/invoices/invoices-page-client";
 import { listInvoices } from "@/lib/services/invoices.service";
 import { listCustomerSummaries } from "@/lib/services/customers.service";

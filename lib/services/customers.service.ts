@@ -3,7 +3,7 @@ import type { Filter } from "mongodb";
 import { z } from "zod";
 
 import { customersRepository } from "@/lib/repositories";
-import type { ContactInfo, Customer, CustomerStatus } from "@/lib/types";
+import type { ContactInfo, Customer, CustomerStatus, GeoLocation } from "@/lib/types";
 import { CUSTOMER_STATUSES } from "@/lib/types";
 import { normalizePhone } from "@/lib/utils/phone";
 
@@ -24,6 +24,7 @@ export type CustomerDetail = CustomerSummary & {
   phone?: string;
   loyaltyScore?: number;
   notes?: string;
+  geoLocation?: GeoLocation;
 };
 
 const customerStatusValues = CUSTOMER_STATUSES;
@@ -36,6 +37,14 @@ export type CustomerListFilters = {
   page?: number;
   limit?: number;
 };
+
+const geoLocationSchema = z.object({
+  latitude: z.coerce.number().refine((value) => !Number.isNaN(value), "عرض جغرافیایی نامعتبر است"),
+  longitude: z.coerce.number().refine((value) => !Number.isNaN(value), "طول جغرافیایی نامعتبر است"),
+  addressLine: z.string().optional(),
+  city: z.string().optional(),
+  province: z.string().optional(),
+});
 
 const createCustomerSchema = z.object({
   displayName: z.string().min(3, "نام مشتری باید حداقل سه کاراکتر باشد"),
@@ -51,6 +60,7 @@ const createCustomerSchema = z.object({
   assignedMarketerId: z.string().optional(),
   assignedMarketerName: z.string().optional(),
   notes: z.string().optional(),
+  geoLocation: geoLocationSchema.optional(),
 });
 
 const updateCustomerSchema = z
@@ -68,6 +78,7 @@ const updateCustomerSchema = z
     assignedMarketerId: z.string().optional().nullable(),
     assignedMarketerName: z.string().optional().nullable(),
     notes: z.string().optional().nullable(),
+    geoLocation: z.union([geoLocationSchema, z.null()]).optional(),
   })
   .strict();
 
@@ -151,6 +162,7 @@ export async function getCustomerDetail(customerId: string): Promise<CustomerDet
     phone: customer.contact.phone,
     loyaltyScore: customer.loyaltyScore,
     notes: customer.notes,
+    geoLocation: customer.geoLocation,
   };
 }
 
@@ -182,6 +194,7 @@ export async function createCustomer(input: unknown) {
     loyaltyScore: payload.loyaltyScore,
     grade: payload.grade,
     notes: payload.notes,
+    geoLocation: payload.geoLocation,
     createdAt: now,
     createdBy: "system",
     updatedAt: now,
@@ -258,18 +271,38 @@ export async function updateCustomer(customerId: string, input: unknown) {
     updateDoc.notes = payload.notes ?? undefined;
   }
 
+  if (payload.geoLocation !== undefined) {
+    if (payload.geoLocation === null) {
+      delete (updateDoc as Partial<Customer>).geoLocation;
+    } else {
+      updateDoc.geoLocation = payload.geoLocation;
+    }
+  }
+
   if (contactChanged) {
     updateDoc.contact = contactUpdates as ContactInfo;
   }
 
   const now = new Date();
-  await customersRepository.updateById(customerId, {
+  const updatePayload: {
+    $set: Partial<Customer> & { updatedAt: Date; updatedBy: string };
+    $unset?: Record<string, "" | true>;
+  } = {
     $set: {
       ...updateDoc,
       updatedAt: now,
       updatedBy: "system",
     },
-  } as never);
+  };
+
+  if (payload.geoLocation === null) {
+    updatePayload.$unset = {
+      ...(updatePayload.$unset ?? {}),
+      geoLocation: "",
+    };
+  }
+
+  await customersRepository.updateById(customerId, updatePayload as never);
 
   return getCustomerDetail(customerId);
 }

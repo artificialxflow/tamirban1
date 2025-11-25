@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  env: {
+    NEXT_PUBLIC_NESHAN_API_KEY:
+      process.env.NEXT_PUBLIC_NESHAN_API_KEY || process.env.NESHAN_API_KEY || "",
+  },
   // پشتیبانی از Service Worker
   async rewrites() {
     return [

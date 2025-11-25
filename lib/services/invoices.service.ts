@@ -3,7 +3,7 @@ import type { Filter } from "mongodb";
 import { z } from "zod";
 
 import { invoicesRepository } from "@/lib/repositories";
-import type { Invoice, InvoiceStatus, InvoiceLineItem } from "@/lib/types";
+import type { Invoice, InvoiceStatus } from "@/lib/types";
 
 export type InvoiceSummary = {
   id: string;

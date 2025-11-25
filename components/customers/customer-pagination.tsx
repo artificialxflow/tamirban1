@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
@@ -12,7 +12,6 @@ interface CustomerPaginationProps {
 }
 
 export function CustomerPagination({ total, page, limit }: CustomerPaginationProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const totalPages = Math.ceil(total / limit);
 

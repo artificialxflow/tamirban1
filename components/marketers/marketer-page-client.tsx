@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { MarketerCreateModal } from "./marketer-create-modal";
 import { MarketerEditModal } from "./marketer-edit-modal";
 import { MarketerList } from "./marketer-list";
 import { MarketerPagination } from "./marketer-pagination";
-import { MarketerDeleteButton } from "./marketer-delete-button";
 import type { MarketerSummary } from "@/lib/services/marketers.service";
 import { apiClient } from "@/lib/utils/api-client";
 import { ProtectedComponent } from "@/components/common/protected-component";
@@ -28,7 +27,6 @@ export function MarketerPageClient({
   initialPage,
   initialLimit,
 }: MarketerPageClientProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingMarketer, setEditingMarketer] = useState<MarketerSummary | null>(null);
@@ -69,7 +67,7 @@ export function MarketerPageClient({
     setEditingMarketer(marketer);
   };
 
-  const handleDelete = async (marketerId: string) => {
+  const handleDelete = async (_marketerId: string) => {
     await handleRefresh();
   };
 

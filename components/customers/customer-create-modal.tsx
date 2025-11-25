@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useActionState } from "react";
+import { useEffect, useRef, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import { createCustomerAction, type CreateCustomerFormState } from "@/app/dashboard/customers/actions";
 import { CUSTOMER_STATUSES } from "@/lib/types";
+import { NeshanMap } from "@/components/visits/neshan-map";
 
 const createCustomerDefaultState: CreateCustomerFormState = {
   success: false,
@@ -45,10 +46,24 @@ export function CustomerCreateModal({ isOpen, onClose, onSuccess }: CustomerCrea
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useActionState(createCustomerAction, createCustomerDefaultState);
   const router = useRouter();
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationAddress, setLocationAddress] = useState("");
+  const locationMarkers = selectedLocation
+    ? [
+        {
+          id: "customer-location",
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          title: locationAddress || "موقعیت مشتری",
+        },
+      ]
+    : [];
 
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
+      setSelectedLocation(null);
+      setLocationAddress("");
       onSuccess?.();
       router.refresh(); // Refresh dashboard data
       setTimeout(() => {
@@ -92,6 +107,9 @@ export function CustomerCreateModal({ isOpen, onClose, onSuccess }: CustomerCrea
         ) : null}
 
         <form ref={formRef} className="grid grid-cols-1 gap-4 md:grid-cols-2" action={formAction}>
+          <input type="hidden" name="geoLocation.latitude" value={selectedLocation?.latitude ?? ""} />
+          <input type="hidden" name="geoLocation.longitude" value={selectedLocation?.longitude ?? ""} />
+          <input type="hidden" name="geoLocation.addressLine" value={locationAddress} />
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
             نام مشتری <span className="text-rose-500">*</span>
             <input
@@ -139,6 +157,63 @@ export function CustomerCreateModal({ isOpen, onClose, onSuccess }: CustomerCrea
               })}
             </select>
           </label>
+
+          <div className="md:col-span-2 flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/70 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-slate-800">موقعیت جغرافیایی مشتری (اختیاری)</span>
+              <span className="text-xs text-slate-500">روی نقشه کلیک کنید تا آدرس دقیق مشتری ثبت شود.</span>
+            </div>
+            <NeshanMap
+              className="h-72"
+              interactive
+              center={selectedLocation ?? undefined}
+              markers={locationMarkers}
+              onLocationSelect={(coords) => setSelectedLocation(coords)}
+            />
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-600">عرض جغرافیایی</label>
+                <input
+                  value={selectedLocation?.latitude?.toFixed(6) ?? ""}
+                  readOnly
+                  placeholder="---"
+                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-600">طول جغرافیایی</label>
+                <input
+                  value={selectedLocation?.longitude?.toFixed(6) ?? ""}
+                  readOnly
+                  placeholder="---"
+                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-600">توضیح یا آدرس کوتاه</label>
+                <input
+                  value={locationAddress}
+                  onChange={(event) => setLocationAddress(event.target.value)}
+                  placeholder="مثال: خیابان ولیعصر، کوچه ۱۲"
+                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                />
+              </div>
+            </div>
+            {selectedLocation ? (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedLocation(null);
+                    setLocationAddress("");
+                  }}
+                  className="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+                >
+                  حذف موقعیت انتخاب شده
+                </button>
+              </div>
+            ) : null}
+          </div>
 
           <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
             برچسب‌ها (با کاما جدا کنید)

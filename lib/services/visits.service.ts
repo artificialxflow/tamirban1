@@ -70,7 +70,7 @@ function resolveHelperColor(tone: "info" | "success" | "warning" | "neutral") {
   }
 }
 
-export async function getVisitsOverview(currentUserId?: string, currentUserRole?: string): Promise<VisitsOverview> {
+export async function getVisitsOverview(currentUserId?: string): Promise<VisitsOverview> {
   try {
     const visitsCollection = await getVisitsCollection();
     const customersCollection = await getCustomersCollection();
@@ -315,6 +315,11 @@ export type VisitSummary = {
   topics: string[];
   notes?: string;
   followUpAction?: string;
+  locationSnapshot?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
 };
 
 export type VisitDetail = VisitSummary & {
@@ -392,6 +397,13 @@ export async function listVisits(
     topics: visit.topics ?? [],
     notes: visit.notes,
     followUpAction: visit.followUpAction,
+    locationSnapshot: visit.locationSnapshot
+      ? {
+          latitude: visit.locationSnapshot.latitude,
+          longitude: visit.locationSnapshot.longitude,
+          address: (visit.locationSnapshot as { address?: string }).address,
+        }
+      : undefined,
   }));
 
   return {

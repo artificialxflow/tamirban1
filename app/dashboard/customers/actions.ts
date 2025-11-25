@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 
 import { createCustomer, deleteCustomer, updateCustomer } from "@/lib/services/customers.service";
+import type { GeoLocation } from "@/lib/types";
 
 export type CreateCustomerFormState = {
   success: boolean;
@@ -15,7 +16,9 @@ export async function createCustomerAction(
   formData: FormData,
 ): Promise<CreateCustomerFormState> {
   try {
-    const payload = {
+    const geoLocation = extractGeoLocationFromForm(formData);
+
+    const payload: Record<string, unknown> = {
       displayName: formData.get("displayName"),
       phone: formData.get("phone"),
       city: formData.get("city") || undefined,
@@ -26,6 +29,10 @@ export async function createCustomerAction(
         .filter(Boolean),
       notes: formData.get("notes") || undefined,
     };
+
+    if (geoLocation !== undefined) {
+      payload.geoLocation = geoLocation;
+    }
 
     await createCustomer(payload);
     revalidatePath("/dashboard/customers");
@@ -62,7 +69,9 @@ export async function updateCustomerAction(
       return { success: false, message: "شناسه مشتری الزامی است." };
     }
 
-    const payload = {
+    const geoLocation = extractGeoLocationFromForm(formData, true);
+
+    const payload: Record<string, unknown> = {
       displayName: formData.get("displayName"),
       phone: formData.get("phone"),
       city: formData.get("city") || undefined,
@@ -73,6 +82,10 @@ export async function updateCustomerAction(
         .filter(Boolean),
       notes: formData.get("notes") || undefined,
     };
+
+    if (geoLocation !== undefined) {
+      payload.geoLocation = geoLocation;
+    }
 
     await updateCustomer(customerId, payload);
     revalidatePath("/dashboard/customers");
@@ -106,6 +119,44 @@ export async function deleteCustomerAction(customerId: string) {
     const message = error instanceof Error ? error.message : "حذف مشتری با خطا مواجه شد.";
     return { success: false, message };
   }
+}
+
+function extractGeoLocationFromForm(formData: FormData, allowClear = false): GeoLocation | null | undefined {
+  const latRaw = formData.get("geoLocation.latitude");
+  const lngRaw = formData.get("geoLocation.longitude");
+  const addressLine = (formData.get("geoLocation.addressLine") as string | null)?.trim();
+  const city = (formData.get("city") as string | null)?.trim();
+
+  const hasLatitude = latRaw !== null && latRaw !== "" && latRaw !== undefined;
+  const hasLongitude = lngRaw !== null && lngRaw !== "" && lngRaw !== undefined;
+
+  if (hasLatitude && hasLongitude) {
+    const latitude = Number(latRaw);
+    const longitude = Number(lngRaw);
+
+    if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+      const geoLocation: GeoLocation = {
+        latitude,
+        longitude,
+      };
+
+      if (addressLine) {
+        geoLocation.addressLine = addressLine;
+      }
+
+      if (city) {
+        geoLocation.city = city;
+      }
+
+      return geoLocation;
+    }
+  }
+
+  if (allowClear && formData.get("geoLocation.clear") === "true") {
+    return null;
+  }
+
+  return undefined;
 }
 
 

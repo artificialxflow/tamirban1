@@ -11,6 +11,8 @@ import type { VisitDetail } from "@/lib/services/visits.service";
 import { SearchableSelect } from "./searchable-select";
 import { PersianDateTimePicker } from "./persian-date-time-picker";
 import { ProtectedComponent } from "@/components/common/protected-component";
+import { NeshanMap } from "./neshan-map";
+import type { MapMarker } from "./neshan-map";
 
 const updateVisitDefaultState: UpdateVisitFormState = {
   success: false,
@@ -46,11 +48,33 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
   const [loading, setLoading] = useState(true);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(visit.customerId);
   const [selectedMarketerId, setSelectedMarketerId] = useState<string>(visit.marketerId);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(
+    visit.locationSnapshot ? { latitude: visit.locationSnapshot.latitude, longitude: visit.locationSnapshot.longitude } : null,
+  );
+  const [locationAddress, setLocationAddress] = useState(visit.locationSnapshot?.address ?? "");
+
+  // ایجاد markers برای نمایش موقعیت موجود
+  const selectedMarkers: MapMarker[] = selectedLocation
+    ? [
+        {
+          id: visit.id,
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          title: visit.locationSnapshot?.address || "موقعیت ویزیت",
+        },
+      ]
+    : [];
 
   useEffect(() => {
     if (isOpen) {
       setSelectedCustomerId(visit.customerId);
       setSelectedMarketerId(visit.marketerId);
+      setSelectedLocation(
+        visit.locationSnapshot
+          ? { latitude: visit.locationSnapshot.latitude, longitude: visit.locationSnapshot.longitude }
+          : null,
+      );
+      setLocationAddress(visit.locationSnapshot?.address ?? "");
       setLoading(true);
       
       // Fetch customers and marketers for dropdowns
@@ -104,16 +128,24 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
   }, [isOpen, visit]);
 
   useEffect(() => {
-    if (state.success && isOpen) {
-      onSuccess?.();
-      const timer = setTimeout(() => {
-        formRef.current?.reset();
-        onClose();
-      }, 500);
-      
-      return () => clearTimeout(timer);
+    if (!state.success || !isOpen) {
+      return undefined;
     }
-  }, [state.success, isOpen, onClose, onSuccess]);
+
+    onSuccess?.();
+    const timer = setTimeout(() => {
+      formRef.current?.reset();
+      setSelectedLocation(
+        visit.locationSnapshot
+          ? { latitude: visit.locationSnapshot.latitude, longitude: visit.locationSnapshot.longitude }
+          : null,
+      );
+      setLocationAddress(visit.locationSnapshot?.address ?? "");
+      onClose();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [state.success, isOpen, onClose, onSuccess, visit.locationSnapshot]);
 
   if (!isOpen) {
     return null;
@@ -162,6 +194,8 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
         ) : (
           <form ref={formRef} className="grid grid-cols-1 gap-4 md:grid-cols-2" action={formAction}>
             <input type="hidden" name="visitId" value={visit.id} />
+            <input type="hidden" name="locationLatitude" value={selectedLocation?.latitude ?? ""} />
+            <input type="hidden" name="locationLongitude" value={selectedLocation?.longitude ?? ""} />
             
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               مشتری <span className="text-rose-500">*</span>
@@ -181,6 +215,68 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
                 placeholder={customers.length === 0 ? "هیچ مشتری‌ای ثبت نشده است" : "جستجو و انتخاب مشتری..."}
               />
             </label>
+
+            <div className="md:col-span-2 flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/70 p-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-semibold text-slate-800">موقعیت جغرافیایی</span>
+                <span className="text-xs text-slate-500">
+                  روی نقشه کلیک کنید تا مختصات ثبت شود. این اطلاعات به تیم بازاریابی کمک می‌کند مسیرها را بهتر برنامه‌ریزی کنند.
+                </span>
+              </div>
+              <NeshanMap
+                className="h-72"
+                markers={selectedMarkers}
+                interactive
+                center={selectedLocation ?? undefined}
+                onLocationSelect={(coords) => setSelectedLocation(coords)}
+              />
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">عرض جغرافیایی</label>
+                  <input
+                    name="locationLatitudeDisplay"
+                    value={selectedLocation?.latitude?.toFixed(6) ?? ""}
+                    readOnly
+                    placeholder="---"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">طول جغرافیایی</label>
+                  <input
+                    name="locationLongitudeDisplay"
+                    value={selectedLocation?.longitude?.toFixed(6) ?? ""}
+                    readOnly
+                    placeholder="---"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">آدرس یا توضیح مختصر</label>
+                  <input
+                    name="locationAddress"
+                    value={locationAddress}
+                    onChange={(event) => setLocationAddress(event.target.value)}
+                    placeholder="مثال: خیابان ولیعصر، کوچه ۱۲"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                  />
+                </div>
+              </div>
+              {selectedLocation ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedLocation(null);
+                      setLocationAddress("");
+                    }}
+                    className="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+                  >
+                    حذف موقعیت انتخاب شده
+                  </button>
+                </div>
+              ) : null}
+            </div>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               بازاریاب <span className="text-rose-500">*</span>

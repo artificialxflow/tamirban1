@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import { verifyOtp } from "@/lib/services/otp.service";
 import { handleApiError, successResponse } from "@/lib/utils/errors";
 

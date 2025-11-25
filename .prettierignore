@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+coverage
+public/fonts
+public/sw.js
+public/offline.html
+*.log
+

@@ -9,6 +9,7 @@ import type { CustomerSummary } from "@/lib/services/customers.service";
 import type { MarketerSummary } from "@/lib/services/marketers.service";
 import { SearchableSelect } from "./searchable-select";
 import { PersianDateTimePicker } from "./persian-date-time-picker";
+import { NeshanMap, type MapMarker } from "./neshan-map";
 
 const createVisitDefaultState: CreateVisitFormState = {
   success: false,
@@ -44,12 +45,16 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedMarketerId, setSelectedMarketerId] = useState<string>("");
   const [modalKey, setModalKey] = useState(0); // Key برای reset کردن component
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationAddress, setLocationAddress] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       // Reset states when modal opens
       setSelectedCustomerId("");
       setSelectedMarketerId("");
+      setSelectedLocation(null);
+      setLocationAddress("");
       setLoading(true);
       
       console.log("[VisitCreateModal] Fetching customers and marketers...");
@@ -158,19 +163,22 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   }, [isOpen]);
 
   useEffect(() => {
-    // فقط وقتی مودال باز است و state.success true است، مودال را ببند
-    if (state.success && isOpen) {
+    if (!state.success || !isOpen) {
+      return undefined;
+    }
+
       onSuccess?.();
       // بستن مودال بعد از 500ms برای نمایش پیام موفقیت
       const timer = setTimeout(() => {
         formRef.current?.reset();
         setSelectedCustomerId("");
         setSelectedMarketerId("");
+        setSelectedLocation(null);
+        setLocationAddress("");
         onClose();
       }, 500);
-      
-      return () => clearTimeout(timer);
-    }
+
+    return () => clearTimeout(timer);
   }, [state.success, isOpen, onClose, onSuccess]);
 
   // Reset state وقتی مودال باز می‌شود
@@ -180,9 +188,22 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
       formRef.current?.reset();
       setSelectedCustomerId("");
       setSelectedMarketerId("");
+      setSelectedLocation(null);
+      setLocationAddress("");
       setModalKey((prev) => prev + 1); // تغییر key برای reset کردن component
     }
   }, [isOpen]);
+
+  const selectedMarkers: MapMarker[] = selectedLocation
+    ? [
+        {
+          id: "selected",
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          title: "موقعیت انتخاب شده",
+        },
+      ]
+    : [];
 
   if (!isOpen) {
     return null;
@@ -229,6 +250,9 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
           </div>
         ) : (
           <form ref={formRef} className="grid grid-cols-1 gap-4 md:grid-cols-2" action={formAction}>
+            <input type="hidden" name="locationLatitude" value={selectedLocation?.latitude ?? ""} />
+            <input type="hidden" name="locationLongitude" value={selectedLocation?.longitude ?? ""} />
+
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               مشتری <span className="text-rose-500">*</span>
               <SearchableSelect
@@ -247,6 +271,68 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
                 placeholder={customers.length === 0 ? "هیچ مشتری‌ای ثبت نشده است" : "جستجو و انتخاب مشتری..."}
               />
             </label>
+
+            <div className="md:col-span-2 flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/70 p-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-semibold text-slate-800">موقعیت جغرافیایی</span>
+                <span className="text-xs text-slate-500">
+                  روی نقشه کلیک کنید تا مختصات ثبت شود. این اطلاعات به تیم بازاریابی کمک می‌کند مسیرها را بهتر برنامه‌ریزی کنند.
+                </span>
+              </div>
+              <NeshanMap
+                className="h-72"
+                markers={selectedMarkers}
+                interactive
+                center={selectedLocation ?? undefined}
+                onLocationSelect={(coords) => setSelectedLocation(coords)}
+              />
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">عرض جغرافیایی</label>
+                  <input
+                    name="locationLatitudeDisplay"
+                    value={selectedLocation?.latitude?.toFixed(6) ?? ""}
+                    readOnly
+                    placeholder="---"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">طول جغرافیایی</label>
+                  <input
+                    name="locationLongitudeDisplay"
+                    value={selectedLocation?.longitude?.toFixed(6) ?? ""}
+                    readOnly
+                    placeholder="---"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-slate-600">آدرس یا توضیح مختصر</label>
+                  <input
+                    name="locationAddress"
+                    value={locationAddress}
+                    onChange={(event) => setLocationAddress(event.target.value)}
+                    placeholder="مثال: خیابان ولیعصر، کوچه ۱۲"
+                    className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                  />
+                </div>
+              </div>
+              {selectedLocation ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedLocation(null);
+                      setLocationAddress("");
+                    }}
+                    className="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+                  >
+                    حذف موقعیت انتخاب شده
+                  </button>
+                </div>
+              ) : null}
+            </div>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               بازاریاب <span className="text-rose-500">*</span>
