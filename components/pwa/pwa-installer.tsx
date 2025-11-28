@@ -86,9 +86,9 @@ export function PWAInstaller() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {/* آیکون نصب */}
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-100 to-primary-200 border-2 border-primary-300">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary-400 bg-linear-to-br from-primary-500 to-primary-700 shadow-inner shadow-primary-700/30">
               <svg
-                className="h-7 w-7 text-primary-700"
+                className="h-7 w-7 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

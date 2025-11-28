@@ -7,6 +7,7 @@ import { CustomerEditModal } from "./customer-edit-modal";
 import type { CustomerSummary, CustomerDetail } from "@/lib/services/customers.service";
 import type { CustomerStatus } from "@/lib/types";
 import { ProtectedComponent } from "@/components/common/protected-component";
+import { Button } from "@/components/common/button";
 
 const STATUS_LABELS: Record<CustomerStatus, string> = {
   ACTIVE: "فعال",
@@ -101,34 +102,30 @@ export function CustomerRow({ customer, isSelected = false, onSelect }: Customer
   return (
     <>
       <tr
-        className={`transition cursor-pointer ${isSelected ? "bg-primary-50" : "hover:bg-primary-50/30"}`}
+        className={`cursor-pointer transition ${isSelected ? "bg-primary-50/80" : "hover:bg-slate-50"}`}
         onClick={handleRowClick}
       >
-        <td className="px-6 py-4 text-xs text-slate-500">{customer.code}</td>
-        <td className="px-6 py-4 font-semibold text-slate-800">{customer.name}</td>
-        <td className="px-6 py-4">{customer.marketer ?? "نامشخص"}</td>
-        <td className="px-6 py-4">{customer.city ?? "-"}</td>
-        <td className="px-6 py-4 text-xs text-slate-600">{formatDate(customer.lastVisitAt)}</td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3 text-[13px] text-slate-500">{customer.code}</td>
+        <td className="px-4 py-3 text-sm font-semibold text-slate-800">{customer.name}</td>
+        <td className="px-4 py-3 text-sm text-slate-600">{customer.marketer ?? "نامشخص"}</td>
+        <td className="px-4 py-3 text-sm text-slate-600">{customer.city ?? "-"}</td>
+        <td className="px-4 py-3 text-[13px] text-slate-500">{formatDate(customer.lastVisitAt)}</td>
+        <td className="px-4 py-3">
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resolveBadgeClass(customer.status)}`}>
             {STATUS_LABELS[customer.status]}
           </span>
         </td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3">
           <span className="inline-flex items-center justify-center rounded-full bg-slate-900 px-2 py-1 text-xs font-semibold text-white">
             {customer.grade ?? "-"}
           </span>
         </td>
-        <td className="px-6 py-4 text-xs font-semibold text-slate-800">{formatRevenue(customer.monthlyRevenue)}</td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3 text-[13px] font-semibold text-slate-800">{formatRevenue(customer.monthlyRevenue)}</td>
+        <td className="px-4 py-3">
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={handleEditClick}
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-              className="inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 active:scale-100"
-            >
+            <Button size="sm" onClick={handleEditClick}>
               ویرایش
-            </button>
+            </Button>
             <ProtectedComponent role="SUPER_ADMIN">
               <div onClick={(e) => e.stopPropagation()}>
                 <CustomerDeleteButton customerId={customer.id} />
@@ -148,6 +145,73 @@ export function CustomerRow({ customer, isSelected = false, onSelect }: Customer
           onSuccess={() => {
             window.location.reload();
           }}
+        />
+      )}
+    </>
+  );
+}
+
+export function CustomerCard({ customer, isSelected = false, onSelect }: CustomerRowProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [customerDetail, setCustomerDetail] = useState<CustomerDetail | null>(null);
+
+  const handleEdit = async () => {
+    try {
+      const tokens = localStorage.getItem("auth_tokens");
+      if (!tokens) return;
+      const { accessToken } = JSON.parse(tokens);
+      const response = await fetch(`/api/customers/${customer.id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setCustomerDetail(data.data);
+          setIsEditModalOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching customer detail:", error);
+    }
+  };
+
+  return (
+    <>
+      <div
+        className={`rounded-2xl border p-4 shadow-sm transition ${isSelected ? "border-primary-200 bg-primary-50/60" : "border-slate-200 bg-white"}`}
+        onClick={() => onSelect?.(customer.id)}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">{customer.name}</p>
+            <p className="mt-1 text-[12px] text-slate-500">کد: {customer.code}</p>
+          </div>
+          <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${resolveBadgeClass(customer.status)}`}>
+            {STATUS_LABELS[customer.status]}
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] text-slate-500">
+          <span>بازاریاب: {customer.marketer ?? "نامشخص"}</span>
+          <span>شهر: {customer.city ?? "-"}</span>
+          <span>آخرین ویزیت: {formatDate(customer.lastVisitAt)}</span>
+          <span>درآمد ماهانه: {formatRevenue(customer.monthlyRevenue)}</span>
+        </div>
+        <div className="mt-3 flex items-center justify-between text-[12px] text-slate-500">
+          <span>درجه: {customer.grade ?? "-"}</span>
+          <Button size="sm" onClick={(e) => { e.stopPropagation(); handleEdit(); }}>
+            ویرایش
+          </Button>
+        </div>
+      </div>
+      {customerDetail && (
+        <CustomerEditModal
+          customer={customerDetail}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setCustomerDetail(null);
+          }}
+          onSuccess={() => window.location.reload()}
         />
       )}
     </>

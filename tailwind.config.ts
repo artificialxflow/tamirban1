@@ -68,9 +68,9 @@ const config: Config = {
         },
       },
       boxShadow: {
-        soft: "0px 16px 56px rgba(16, 24, 40, 0.08)",
-        "soft-primary": "0px 16px 56px rgba(59, 130, 246, 0.12)",
-        "soft-accent": "0px 16px 56px rgba(34, 197, 94, 0.12)",
+        soft: "0px 12px 32px rgba(15, 23, 42, 0.06)",
+        "soft-primary": "0px 14px 30px rgba(59, 130, 246, 0.10)",
+        "soft-accent": "0px 14px 30px rgba(34, 197, 94, 0.10)",
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",

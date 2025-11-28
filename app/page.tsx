@@ -16,6 +16,12 @@ const highlights = [
   },
 ];
 
+const summaryBadges = [
+  "احراز هویت OTP متصل به تابان‌اس‌ام‌اس",
+  "مدیریت یکپارچه مشتری، ویزیت، پیش‌فاکتور",
+  "ثبت مختصات و گزارش‌گیری مخصوص تیم بازاریابی",
+];
+
 import Link from "next/link";
 
 export default function Home() {
@@ -36,15 +42,11 @@ export default function Home() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
-          <span className="rounded-full border border-slate-200 px-4 py-2">
-            Next.js 14+ App Router
-          </span>
-          <span className="rounded-full border border-slate-200 px-4 py-2">
-            Tailwind + RTL آماده
-          </span>
-          <span className="rounded-full border border-slate-200 px-4 py-2">
-            معماری ماژولار
-          </span>
+          {summaryBadges.map((badge) => (
+            <span key={badge} className="rounded-full border border-slate-200 px-4 py-2">
+              {badge}
+            </span>
+          ))}
         </div>
         <div className="flex flex-wrap gap-3">
           <Link

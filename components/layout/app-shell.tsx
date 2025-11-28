@@ -93,7 +93,7 @@ export function AppShell({
   );
 
   const sidebar = (
-    <aside className="flex w-full flex-col gap-6 rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg lg:w-64">
+    <aside className="flex w-full flex-col gap-6 rounded-3xl border-2 border-slate-300 bg-linear-to-br from-white to-slate-50 p-6 shadow-lg lg:w-64">
       <header className="flex items-center justify-between rounded-2xl border-2 border-primary-200 bg-primary-50 p-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs font-bold uppercase tracking-wider text-primary-600">TamirBan CRM</span>
@@ -138,11 +138,11 @@ export function AppShell({
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-4 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-md">
+      <div className="mt-auto flex flex-col gap-4 rounded-2xl border-2 border-slate-200 bg-linear-to-br from-white to-slate-50 p-5 shadow-md">
         {user ? (
           <>
-            <div className="flex items-center gap-3 rounded-xl border-2 border-primary-200 bg-primary-50 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-md">
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700 shadow-inner">
                 <svg
                   className="h-6 w-6"
                   fill="none"
@@ -157,17 +157,18 @@ export function AppShell({
                   />
                 </svg>
               </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <p className="text-xs font-medium uppercase tracking-wide text-primary-600">کاربر فعلی</p>
-                <p className="truncate text-sm font-bold text-slate-800">{user.mobile}</p>
-                <p className="text-xs font-medium text-slate-600">
-                  نقش: <span className="font-semibold text-primary-700">{user.role}</span>
-                </p>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <p className="text-xs font-semibold text-slate-500">کاربر فعلی</p>
+                <p className="truncate text-sm font-semibold text-slate-800">{user.mobile}</p>
+                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-[11px] font-semibold text-slate-600">
+                  نقش
+                  <span className="text-primary-600">{user.role}</span>
+                </span>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-red-500 bg-gradient-to-r from-red-100 to-red-200 px-5 py-3 text-sm font-bold text-red-900 transition hover:from-red-200 hover:to-red-300 hover:border-red-600 hover:text-red-950 shadow-md hover:shadow-lg"
+              className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-red-500 bg-linear-to-r from-red-100 to-red-200 px-5 py-3 text-sm font-bold text-red-900 transition hover:from-red-200 hover:to-red-300 hover:border-red-600 hover:text-red-950 shadow-md hover:shadow-lg"
               style={{ color: '#991b1b' }}
             >
               <svg
@@ -202,22 +203,30 @@ export function AppShell({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 text-slate-800">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-slate-50 text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 lg:flex-row">
         <div className="flex items-center justify-between lg:hidden">
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-800"
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-3 text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-800"
             aria-expanded={isMenuOpen}
             aria-controls="tamirban-sidebar"
+            aria-label={isMenuOpen ? "بستن منو" : "باز کردن منو"}
           >
-            <span className="inline-flex h-2 w-2 rounded-full bg-primary-500" />
-            {isMenuOpen ? "بستن منو" : "باز کردن منو"}
+            {isMenuOpen ? (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
         </div>
 
-        <div className="hidden w-full max-w-[260px] lg:flex lg:flex-shrink-0" id="tamirban-sidebar">
+        <div className="hidden w-full max-w-[260px] lg:flex lg:shrink-0" id="tamirban-sidebar">
           {sidebar}
         </div>
 
@@ -245,14 +254,14 @@ export function AppShell({
       </div>
 
       {isMenuOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-end lg:hidden">
+        <div className="fixed inset-0 z-50 flex items-start justify-start lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
             aria-label="بستن منو"
           />
-          <div className="relative z-10 m-4 w-full max-w-xs" id="tamirban-sidebar">
+          <div className="relative z-10 ml-auto m-4 w-full max-w-xs" id="tamirban-sidebar">
             {sidebar}
           </div>
         </div>

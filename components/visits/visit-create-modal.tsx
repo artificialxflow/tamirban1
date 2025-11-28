@@ -10,6 +10,7 @@ import type { MarketerSummary } from "@/lib/services/marketers.service";
 import { SearchableSelect } from "./searchable-select";
 import { PersianDateTimePicker } from "./persian-date-time-picker";
 import { NeshanMap, type MapMarker } from "./neshan-map";
+import { Button } from "@/components/common/button";
 
 const createVisitDefaultState: CreateVisitFormState = {
   success: false,
@@ -19,14 +20,16 @@ const createVisitDefaultState: CreateVisitFormState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button
+    <Button
       type="submit"
-      style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-      className="inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
-      disabled={pending}
+      size="lg"
+      isLoading={pending}
+      loadingText="در حال ثبت..."
+      className="text-white shadow-lg"
+      style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" }}
     >
-      {pending ? "در حال ثبت..." : "ثبت ویزیت"}
-    </button>
+      ثبت ویزیت
+    </Button>
   );
 }
 
@@ -394,13 +397,9 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
             </label>
 
             <div className="md:col-span-2 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
-              >
+              <Button type="button" variant="ghost" onClick={onClose}>
                 انصراف
-              </button>
+              </Button>
               <SubmitButton />
             </div>
           </form>

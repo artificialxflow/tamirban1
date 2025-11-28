@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/utils/api-client";
 import type { VisitDetail } from "@/lib/services/visits.service";
 import { VisitEditModal } from "./visit-edit-modal";
 import { ProtectedComponent } from "@/components/common/protected-component";
+import { Button } from "@/components/common/button";
 
 const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
   year: "numeric",
@@ -212,18 +213,21 @@ export function VisitDetailModal({ visitId, isOpen, onClose, onSuccess }: VisitD
             <div className="flex items-center justify-between pt-4 border-t border-slate-200">
               <div className="flex items-center gap-3">
                 <ProtectedComponent permission="visits:write">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setIsEditModalOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-2xl border-2 border-primary-300 bg-primary-100 px-5 py-3 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
+                    leftIcon={
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    }
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
                     ویرایش
-                  </button>
+                  </Button>
                 </ProtectedComponent>
                 <ProtectedComponent permission="visits:delete">
-                  <button
+                  <Button
+                    variant="danger"
                     onClick={async () => {
                       if (!confirm("آیا مطمئن هستید که می‌خواهید این ویزیت را حذف کنید؟")) {
                         return;
@@ -245,22 +249,21 @@ export function VisitDetailModal({ visitId, isOpen, onClose, onSuccess }: VisitD
                         setIsDeleting(false);
                       }
                     }}
-                    disabled={isDeleting}
-                    className="inline-flex items-center gap-2 rounded-2xl border-2 border-red-300 bg-red-100 px-5 py-3 text-sm font-semibold text-red-800 transition hover:border-red-400 hover:bg-red-200 hover:text-red-900 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    isLoading={isDeleting}
+                    loadingText="در حال حذف..."
+                    leftIcon={
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    }
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    {isDeleting ? "در حال حذف..." : "حذف"}
-                  </button>
+                    حذف
+                  </Button>
                 </ProtectedComponent>
               </div>
-              <button
-                onClick={onClose}
-                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
-              >
+              <Button variant="ghost" onClick={onClose}>
                 بستن
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}

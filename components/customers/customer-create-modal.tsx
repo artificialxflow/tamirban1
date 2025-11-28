@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { createCustomerAction, type CreateCustomerFormState } from "@/app/dashboard/customers/actions";
 import { CUSTOMER_STATUSES } from "@/lib/types";
 import { NeshanMap } from "@/components/visits/neshan-map";
+import { Button } from "@/components/common/button";
 
 const createCustomerDefaultState: CreateCustomerFormState = {
   success: false,
@@ -25,14 +26,17 @@ const STATUS_LABELS: Record<string, string> = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button
+    <Button
       type="submit"
-      style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-      className="inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
-      disabled={pending}
+      size="lg"
+      isLoading={pending}
+      loadingText="در حال ثبت..."
+      fullWidth
+      className="sm:w-auto text-white shadow-lg"
+      style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" }}
     >
-      {pending ? "در حال ثبت..." : "ثبت مشتری"}
-    </button>
+      ثبت مشتری
+    </Button>
   );
 }
 
@@ -77,8 +81,8 @@ export function CustomerCreateModal({ isOpen, onClose, onSuccess }: CustomerCrea
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm sm:p-6">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-2xl backdrop-blur-sm sm:p-6 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -234,14 +238,10 @@ export function CustomerCreateModal({ isOpen, onClose, onSuccess }: CustomerCrea
             />
           </label>
 
-          <div className="md:col-span-2 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
-            >
+          <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <Button type="button" variant="ghost" onClick={onClose} fullWidth className="sm:w-auto">
               انصراف
-            </button>
+            </Button>
             <SubmitButton />
           </div>
         </form>

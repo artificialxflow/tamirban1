@@ -15,6 +15,7 @@ import { apiClient } from "@/lib/utils/api-client";
 import type { VisitSummary } from "@/lib/services/visits.service";
 import type { VisitDetail } from "@/lib/services/visits.service";
 import type { VisitSummaryCard, VisitReminder } from "@/lib/services/visits.service";
+import { Button } from "@/components/common/button";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
 
@@ -119,18 +120,14 @@ export function VisitsPageClient({
         description="مدیریت و ردیابی ویزیت‌های حضوری، وضعیت‌ها و یادداشت‌های تیم بازاریابی."
         activeHref="/dashboard/visits"
         actions={
-          <>
-            <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
-              خروجی برنامه
-            </button>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-              className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-100 disabled:opacity-50"
-            >
-              ثبت ویزیت جدید
-            </button>
-          </>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            size="md"
+            className="text-white shadow-lg"
+            style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" }}
+          >
+            ثبت ویزیت جدید
+          </Button>
         }
         toolbar={
           <div className="flex flex-col gap-3">
@@ -148,33 +145,45 @@ export function VisitsPageClient({
         }
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr,1fr]">
-          <section className="rounded-3xl border-2 border-slate-300 bg-white p-6 shadow-sm">
-            <header className="flex items-center justify-between">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-slate-800">برنامه زمانی ویزیت‌ها</h2>
-                <p className="text-xs text-slate-600">
+                <h2 className="text-base font-semibold text-slate-800">برنامه زمانی ویزیت‌ها</h2>
+                <p className="text-[12px] text-slate-500">
                   {numberFormatter.format(visits.length)} از {numberFormatter.format(total)} مورد
                 </p>
               </div>
             </header>
             {visits.length === 0 ? (
-              <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-12 text-center">
-                <h3 className="text-lg font-semibold text-slate-800">هیچ ویزیتی ثبت نشده است</h3>
-                <p className="mt-2 text-sm text-slate-600">برای شروع، یک ویزیت جدید ثبت کنید.</p>
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary-500 shadow-sm">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m9 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-800">هیچ ویزیتی ثبت نشده است</h3>
+                  <p className="mt-1 text-[13px] text-slate-600">برای شروع، گزینه ثبت ویزیت را انتخاب کنید.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setIsCreateModalOpen(true)}>
+                    ثبت ویزیت جدید
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
-                <div className="mt-4 overflow-x-auto">
+                <div className="mt-4 hidden overflow-x-auto lg:block">
                   <table className="w-full min-w-[720px] divide-y divide-slate-100 text-right text-sm text-slate-600">
-                    <thead className="bg-slate-100 border-b-2 border-slate-300 text-xs font-semibold text-slate-700">
+                    <thead className="bg-slate-50 text-[12px] font-semibold uppercase text-slate-500">
                       <tr>
-                        <th className="px-5 py-3">تاریخ و ساعت</th>
-                        <th className="px-5 py-3">مشتری</th>
-                        <th className="px-5 py-3">بازاریاب</th>
-                        <th className="px-5 py-3">موضوع</th>
-                        <th className="px-5 py-3">وضعیت</th>
-                        <th className="px-5 py-3">یادداشت</th>
-                        <th className="px-5 py-3 text-center">عملیات</th>
+                        <th className="px-4 py-3">تاریخ و ساعت</th>
+                        <th className="px-4 py-3">مشتری</th>
+                        <th className="px-4 py-3">بازاریاب</th>
+                        <th className="px-4 py-3">موضوع</th>
+                        <th className="px-4 py-3">وضعیت</th>
+                        <th className="px-4 py-3">یادداشت</th>
+                        <th className="px-4 py-3 text-center">عملیات</th>
                       </tr>
                     </thead>
                     <VisitList 
@@ -185,6 +194,16 @@ export function VisitsPageClient({
                       deletingVisitId={isDeleting}
                     />
                   </table>
+                </div>
+                <div className="lg:hidden">
+                  <VisitList
+                    visits={visits}
+                    onVisitClick={(visitId) => setSelectedVisitId(visitId)}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    deletingVisitId={isDeleting}
+                    variant="cards"
+                  />
                 </div>
                 <VisitPagination total={total} page={initialPage} limit={initialLimit} />
               </>

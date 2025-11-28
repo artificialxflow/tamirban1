@@ -1,7 +1,7 @@
 import type { CustomerStatus } from "@/lib/types";
 import { getCustomerDetail, listCustomerSummaries } from "@/lib/services/customers.service";
 import { AppShell } from "@/components/layout/app-shell";
-import { CustomerList } from "@/components/customers/customer-list";
+import { CustomerList, CustomerCards } from "@/components/customers/customer-list";
 import { CustomerFilters } from "@/components/customers/customer-filters";
 import { CustomerPagination } from "@/components/customers/customer-pagination";
 import { CustomerAddButton } from "@/components/customers/customer-add-button";
@@ -84,9 +84,6 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       activeHref="/dashboard/customers"
       actions={
         <>
-          <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-sm font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
-            ورود از Excel
-          </button>
           <CustomerAddButton />
         </>
       }
@@ -103,35 +100,36 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         </section>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr,1fr]">
-          <section className="overflow-hidden rounded-3xl border-2 border-slate-300 bg-white shadow-sm">
-            <header className="flex items-center justify-between border-b-2 border-slate-300 bg-slate-100 px-6 py-4">
+          <section className="overflow-hidden rounded-3xl border-2 border-slate-200 bg-white shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
               <div>
-                <h2 className="text-lg font-semibold text-slate-800">لیست مشتریان</h2>
-                <p className="text-xs text-slate-600">
+                <h2 className="text-base font-semibold text-slate-800">لیست مشتریان</h2>
+                <p className="text-[12px] text-slate-500">
                   {numberFormatter.format(result.data.length)} از {numberFormatter.format(result.total)} مورد
                 </p>
               </div>
-              <button className="rounded-full border-2 border-primary-300 bg-primary-100 px-4 py-2 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md">
-                خروجی Excel
-              </button>
+              <div className="text-[12px] text-slate-400">گزارش‌های خروجی به‌زودی</div>
             </header>
-            <div className="relative overflow-x-auto">
+            <div className="relative hidden overflow-x-auto lg:block">
               <table className="w-full min-w-[720px] divide-y divide-slate-100 text-right text-sm text-slate-600">
-                <thead className="bg-slate-100 border-b-2 border-slate-300 text-xs font-semibold text-slate-700">
+                <thead className="bg-slate-50 text-[12px] font-semibold uppercase text-slate-500">
                   <tr>
-                    <th className="px-6 py-4">شناسه</th>
-                    <th className="px-6 py-4">نام مشتری</th>
-                    <th className="px-6 py-4">بازاریاب مسئول</th>
-                    <th className="px-6 py-4">شهر</th>
-                    <th className="px-6 py-4">آخرین ویزیت</th>
-                    <th className="px-6 py-4">وضعیت</th>
-                    <th className="px-6 py-4">امتیاز</th>
-                    <th className="px-6 py-4">درآمد ماه جاری (ریال)</th>
-                    <th className="px-6 py-4 text-center">عملیات</th>
+                    <th className="px-4 py-3">شناسه</th>
+                    <th className="px-4 py-3">نام مشتری</th>
+                    <th className="px-4 py-3">بازاریاب مسئول</th>
+                    <th className="px-4 py-3">شهر</th>
+                    <th className="px-4 py-3">آخرین ویزیت</th>
+                    <th className="px-4 py-3">وضعیت</th>
+                    <th className="px-4 py-3">امتیاز</th>
+                    <th className="px-4 py-3">درآمد ماه جاری (ریال)</th>
+                    <th className="px-4 py-3 text-center">عملیات</th>
                   </tr>
                 </thead>
                 <CustomerList customers={result.data} selectedCustomerId={selectedCustomerId} />
               </table>
+            </div>
+            <div className="p-4 lg:hidden">
+              <CustomerCards customers={result.data} selectedCustomerId={selectedCustomerId} />
             </div>
             <CustomerPagination total={result.total} page={result.page} limit={result.limit} />
           </section>
