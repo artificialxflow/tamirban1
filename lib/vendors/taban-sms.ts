@@ -5,7 +5,9 @@
 
 interface SendSmsParams {
   phone: string; // شماره گیرنده (فرمت: 09123456789)
-  message: string; // متن پیامک
+  message?: string; // متن پیامک (اختیاری - در صورت استفاده از Pattern نیاز نیست)
+  patternCode?: string; // کد پترن SMS (اختیاری)
+  patternValues?: Record<string, string>; // متغیرهای پترن (مثلاً {code: "1234"})
 }
 
 interface TabaanSmsResponse {
@@ -28,7 +30,68 @@ interface TabaanApiResponse {
 }
 
 /**
+ * تبدیل شماره موبایل به فرمت E.164 (مثلاً: +989123456789)
+ * برای Pattern API باید به فرمت E.164 باشد
+ */
+function formatRecipientToE164(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+
+  if (digits.startsWith("+98")) {
+    return `+${digits.slice(1)}`;
+  }
+
+  if (digits.startsWith("98")) {
+    return `+${digits}`;
+  }
+
+  if (digits.startsWith("09")) {
+    return `+98${digits.slice(1)}`;
+  }
+
+  if (digits.startsWith("9") && digits.length === 10) {
+    return `+98${digits}`;
+  }
+
+  // اگر قبلاً E.164 است، برگردان
+  if (phone.startsWith("+")) {
+    return phone;
+  }
+
+  // پیش‌فرض: فرض می‌کنیم شماره ایرانی است
+  return `+98${digits}`;
+}
+
+/**
+ * تبدیل شماره خط خدماتی به فرمت E.164 (مثلاً: +983000505)
+ * برای Pattern API باید به فرمت E.164 باشد
+ */
+function formatSenderToE164(sender: string): string {
+  const digits = sender.replace(/\D/g, "");
+
+  if (digits.startsWith("+98")) {
+    return `+${digits.slice(1)}`;
+  }
+
+  if (digits.startsWith("98")) {
+    return `+${digits}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `+98${digits.slice(1)}`;
+  }
+
+  // اگر قبلاً E.164 است، برگردان
+  if (sender.startsWith("+")) {
+    return sender;
+  }
+
+  // پیش‌فرض: فرض می‌کنیم شماره ایرانی است
+  return `+98${digits}`;
+}
+
+/**
  * تبدیل شماره موبایل به فرمت مورد قبول تابان (مثلاً: 09123456789)
+ * برای webservice API (روش قدیمی)
  */
 function formatRecipient(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -54,6 +117,7 @@ function formatRecipient(phone: string): string {
 
 /**
  * تبدیل شماره خط خدماتی به فرمت مورد قبول تابان (بدون پیشوند کشور)
+ * برای webservice API (روش قدیمی)
  */
 function formatSender(sender: string): string {
   const digits = sender.replace(/\D/g, "");
@@ -97,24 +161,60 @@ export async function sendSms(params: SendSmsParams): Promise<TabaanSmsResponse>
     throw new Error(`تنظیمات تابان اس‌ام‌اس کامل نیست. متغیرهای زیر موجود نیستند: ${missing.join(", ")}`);
   }
 
-  const recipient = formatRecipient(params.phone);
-  const fromNumber = formatSender(senderNumber);
-
-  const requestBody = {
-    sending_type: "webservice",
-    from_number: fromNumber,
-    message: params.message,
-    params: {
-      recipients: [recipient],
-    },
-  };
-
-  console.log("[Tabaan SMS] درخواست ارسال:", {
-    url: `${baseUrl}/api/send`,
-    from: fromNumber,
-    to: recipient,
-    messageLength: params.message.length,
-  });
+  // ساخت body درخواست - استفاده از Pattern یا Message
+  let requestBody: Record<string, any>;
+  
+  if (params.patternCode && params.patternValues) {
+    // استفاده از Pattern API
+    // طبق مستندات IPPanel Edge API:
+    // - sending_type باید "pattern" باشد
+    // - فیلد "code" برای pattern_code استفاده می‌شود
+    // - فیلد "params" برای pattern_values استفاده می‌شود
+    // - فیلد "recipients" در سطح اصلی است (نه داخل params)
+    // - فیلد "message" نباید ارسال شود
+    // - شماره‌ها باید به فرمت E.164 باشند (مثلاً +989120000000)
+    const recipient = formatRecipientToE164(params.phone);
+    const fromNumber = formatSenderToE164(senderNumber);
+    
+    requestBody = {
+      sending_type: "pattern",
+      from_number: fromNumber,
+      code: params.patternCode, // نام فیلد در API: "code" نه "pattern_code"
+      recipients: [recipient], // recipients در سطح اصلی است و باید E.164 باشد
+      params: params.patternValues, // pattern_values به عنوان "params" ارسال می‌شود
+    };
+    
+    console.log("[Tabaan SMS] درخواست ارسال با Pattern:", {
+      url: `${baseUrl}/api/send`,
+      from: fromNumber,
+      to: recipient,
+      patternCode: params.patternCode,
+      patternValues: params.patternValues,
+      requestBody: JSON.stringify(requestBody, null, 2),
+    });
+  } else if (params.message) {
+    // استفاده از Message مستقیم (روش قدیمی - webservice API)
+    const recipient = formatRecipient(params.phone);
+    const fromNumber = formatSender(senderNumber);
+    
+    requestBody = {
+      sending_type: "webservice",
+      from_number: fromNumber,
+      message: params.message,
+      params: {
+        recipients: [recipient],
+      },
+    };
+    
+    console.log("[Tabaan SMS] درخواست ارسال با Message:", {
+      url: `${baseUrl}/api/send`,
+      from: fromNumber,
+      to: recipient,
+      messageLength: params.message.length,
+    });
+  } else {
+    throw new Error("برای ارسال SMS باید یا message یا patternCode+patternValues مشخص شود.");
+  }
 
   try {
     const response = await fetch(`${baseUrl}/api/send`, {
@@ -164,13 +264,38 @@ export async function sendSms(params: SendSmsParams): Promise<TabaanSmsResponse>
 
 /**
  * ارسال پیامک OTP
+ * از Pattern استفاده می‌کند اگر TABAN_SMS_PATTERN_CODE موجود باشد، در غیر این صورت از متن مستقیم
  */
 export async function sendOtpSms(phone: string, code: string): Promise<TabaanSmsResponse> {
-  const message = `کد ورود شما: ${code}\n\nاین کد تا 5 دقیقه معتبر است.`;
+  const patternCode = process.env.TABAN_SMS_PATTERN_CODE;
   
-  return sendSms({
-    phone,
-    message,
-  });
+  if (patternCode) {
+    // استفاده از Pattern API
+    // نام متغیر Pattern را از متغیر محیطی می‌خوانیم (پیش‌فرض: "verification-code")
+    // اگر در پنل تابان متغیر دیگری است، باید TABAN_SMS_PATTERN_VAR را تنظیم کنید
+    const patternVarName = process.env.TABAN_SMS_PATTERN_VAR || "verification-code";
+    
+    console.log("[Tabaan SMS] استفاده از Pattern:", {
+      patternCode,
+      patternVarName,
+      code,
+    });
+    
+    return sendSms({
+      phone,
+      patternCode,
+      patternValues: {
+        [patternVarName]: code, // متغیر Pattern - باید با نام متغیر در پنل تابان مطابقت داشته باشد
+      },
+    });
+  } else {
+    // Fallback به روش قدیمی (متن مستقیم)
+    const message = `کد ورود شما: ${code}\n\nاین کد تا 5 دقیقه معتبر است.`;
+    
+    return sendSms({
+      phone,
+      message,
+    });
+  }
 }
 

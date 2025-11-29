@@ -48,10 +48,10 @@
    - محدودیت ساعت ارسال (در صورت وجود)
    - کدهای خطا و معنی آن‌ها
 
-4. **الگوی پیامک (Pattern) - اختیاری**
-   - در صورت استفاده از Pattern، شناسه Pattern Code
-   - ساختار متغیرهای الگو (مثلاً `{code}` یا `{otp}`)
-   - متن نهایی پیام OTP
+4. **الگوی پیامک (Pattern) - ✅ فعال شده**
+   - ✅ **Pattern Code:** `0wopnv45vvw7mss` (در `.env.example` تنظیم شده)
+   - ⚠️ **ساختار متغیرهای الگو:** باید از پنل تابان بررسی شود (احتمالاً `{code}` یا `{otp}`)
+   - ✅ **پیاده‌سازی:** کلاینت تابان برای استفاده از Pattern به‌روزرسانی شده است
 
 ## 3. تغییرات فنی مورد نیاز
 
@@ -94,6 +94,38 @@ export async function sendSms(params: SendSmsParams): Promise<TabaanSmsResponse>
 - در صورت موفقیت ارسال، ثبت لاگ در `SMSLog` با وضعیت `QUEUED`
 - در صورت خطا، ثبت لاگ با وضعیت `FAILED` و throw کردن خطا
 - در محیط Production، حذف بازگرداندن کد از پاسخ API
+
+### 3.2.1. پشتیبانی از Pattern SMS ✅
+
+**فایل:** `lib/vendors/taban-sms.ts`
+
+**تغییرات انجام شده:**
+- ✅ افزودن متغیر محیطی `TABAN_SMS_PATTERN_CODE=0wopnv45vvw7mss` به `.env.example`
+- ✅ به‌روزرسانی `SendSmsParams` برای پشتیبانی از `patternCode` و `patternValues`
+- ✅ به‌روزرسانی تابع `sendSms` برای پشتیبانی از Pattern API:
+  - اگر `patternCode` و `patternValues` موجود باشند، از Pattern API استفاده می‌شود
+  - در غیر این صورت، از روش قدیمی (متن مستقیم) استفاده می‌شود
+- ✅ به‌روزرسانی تابع `sendOtpSms`:
+  - خواندن `TABAN_SMS_PATTERN_CODE` از متغیرهای محیطی
+  - استفاده از Pattern اگر موجود باشد
+  - Fallback به روش قدیمی اگر Pattern موجود نباشد
+
+**ساختار Pattern API:**
+```typescript
+{
+  sending_type: "webservice",
+  from_number: "3000505",
+  pattern_code: "0wopnv45vvw7mss",
+  pattern_values: {
+    code: "1234" // نام متغیر باید از پنل تابان بررسی شود (ممکن است "otp" باشد)
+  },
+  params: {
+    recipients: ["09123456789"]
+  }
+}
+```
+
+**نکته مهم:** نام متغیر Pattern (مثلاً `code` یا `otp`) باید از پنل تابان بررسی شود. در حال حاضر از `code` استفاده شده است.
 
 ### 3.3. ثبت لاگ ارسال
 
@@ -161,4 +193,7 @@ export async function sendSms(params: SendSmsParams): Promise<TabaanSmsResponse>
 
 ---
 
-**نکته مهم:** قبل از استقرار در Production، حتماً `TABAN_SMS_SENDER_NUMBER` را از پنل تابان دریافت و در `.env` سرور تنظیم کنید.
+**نکته مهم:** 
+- قبل از استقرار در Production، حتماً `TABAN_SMS_SENDER_NUMBER` را از پنل تابان دریافت و در `.env` سرور تنظیم کنید.
+- ✅ `TABAN_SMS_PATTERN_CODE` تنظیم شده است: `0wopnv45vvw7mss`
+- ⚠️ **نیاز به بررسی:** نام متغیر Pattern (مثلاً `code` یا `otp`) باید از پنل تابان بررسی شود و در صورت نیاز در کد به‌روزرسانی شود.

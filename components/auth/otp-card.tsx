@@ -180,8 +180,7 @@ export function OTPCard({
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>کد تست فعلی: 0000</span>
+            <div className="flex items-center justify-end text-xs text-slate-500">
               <button
                 type="button"
                 className="font-semibold text-primary-600 hover:text-primary-700"
