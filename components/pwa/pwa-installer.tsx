@@ -102,7 +102,7 @@ export function PWAInstaller() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">نصب اپلیکیشن تعمیربان</p>
+              <p className="text-sm font-semibold text-slate-800">نصب اپلیکیشن سام‌تعمیر</p>
               <p className="text-xs text-slate-600">برای دسترسی سریع‌تر، اپلیکیشن را نصب کنید</p>
             </div>
           </div>

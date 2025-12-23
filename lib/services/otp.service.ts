@@ -9,13 +9,7 @@ import { normalizePhone } from "@/lib/utils/phone";
 import { sendOtpSms } from "@/lib/vendors/taban-sms";
 
 const SALT_ROUNDS = 8;
-const FIXED_CODE = "0000";
 const OTP_LENGTH = 4;
-
-// بررسی اینکه آیا در حالت تست هستیم یا نه (برای نمایش کد در پاسخ)
-const isTestMode = () => {
-  return process.env.NODE_ENV === "development" && process.env.OTP_TEST_CODE === "0000";
-};
 
 // بررسی اینکه آیا باید SMS واقعی ارسال شود
 const shouldSendRealSms = () => {
@@ -32,11 +26,8 @@ const shouldSendRealSms = () => {
 export async function requestOtp(phone: string) {
   const normalizedPhone = normalizePhone(phone);
 
-  // تولید کد OTP
-  // اگر در حالت تست باشیم و SMS واقعی فعال نباشد، از کد ثابت استفاده می‌کنیم
-  // در غیر این صورت، کد تصادفی تولید می‌کنیم
-  const useFixedCode = isTestMode() && !shouldSendRealSms();
-  const code = useFixedCode ? FIXED_CODE : generateOtpCode(OTP_LENGTH);
+  // تولید کد OTP تصادفی
+  const code = generateOtpCode(OTP_LENGTH);
   const codeHash = await bcrypt.hash(code, SALT_ROUNDS);
   
   // ذخیره کد در دیتابیس
@@ -101,13 +92,8 @@ export async function requestOtp(phone: string) {
     console.log("[OTP Service] SMS واقعی غیرفعال است. API Key موجود نیست یا در حالت تست هستیم.");
   }
 
-  // در حالت تست (بدون SMS واقعی)، کد را برمی‌گردانیم (برای تست)
-  // اگر SMS واقعی ارسال شده باشد، کد را برنمی‌گردانیم
-  const shouldReturnCode = isTestMode() && !shouldSendRealSms();
-  
   return { 
-    success: true, 
-    ...(shouldReturnCode ? { code } : {}) 
+    success: true
   };
 }
 
@@ -117,26 +103,6 @@ export async function verifyOtp(phone: string, code: string) {
   }
 
   const normalizedPhone = normalizePhone(phone);
-
-  // بررسی کد تست 0000 (همیشه فعال برای تست)
-  const isTestCode = code === FIXED_CODE;
-  
-  if (isTestCode) {
-    // در حالت تست، مستقیماً کاربر را پیدا یا ایجاد می‌کنیم
-    console.log("[OTP Service] استفاده از کد تست 0000 برای شماره:", normalizedPhone);
-    
-    let user = await findUserByPhone(normalizedPhone);
-    if (!user) {
-      user = await createUserWithPhone(normalizedPhone);
-    }
-
-    // پاک کردن هر attempt قبلی
-    await clearOtpAttempt(normalizedPhone);
-
-    const tokenPair = await issueTokenPair(user._id, user.mobile);
-
-    return { ...tokenPair, user };
-  }
 
   // بررسی عادی OTP
   const attemptRecord = await getOtpAttempt(normalizedPhone);

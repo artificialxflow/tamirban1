@@ -6,6 +6,7 @@ import { createInvoice } from "@/app/dashboard/invoices/actions";
 import { PersianDateTimePicker } from "@/components/visits/persian-date-time-picker";
 
 interface InvoiceLineItem {
+  productId?: string;
   title: string;
   quantity: number;
   unit: string;
@@ -26,6 +27,7 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
   const [items, setItems] = useState<InvoiceLineItem[]>([
     { title: "", quantity: 1, unit: "عدد", unitPrice: 0, taxRate: 9, discount: 0 },
   ]);
+  const [products, setProducts] = useState<Array<{ id: string; name: string; unitPrice: number; taxRate?: number; currency: "IRR" | "USD" }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -35,6 +37,35 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
       setItems([{ title: "", quantity: 1, unit: "عدد", unitPrice: 0, taxRate: 9, discount: 0 }]);
       setError(null);
       formRef.current?.reset();
+    }
+  }, [isOpen]);
+
+  // بارگذاری محصولات
+  useEffect(() => {
+    if (isOpen) {
+      const fetchProducts = async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          if (!token) return;
+          
+          const response = await fetch("/api/products?isActive=true", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              setProducts(data.data || []);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching products:", err);
+        }
+      };
+      
+      fetchProducts();
     }
   }, [isOpen]);
 
@@ -54,6 +85,21 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     setItems(newItems);
+  };
+
+  const handleProductSelect = (index: number, productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (product) {
+      const newItems = [...items];
+      newItems[index] = {
+        ...newItems[index],
+        productId: product.id,
+        title: product.name,
+        unitPrice: product.unitPrice,
+        taxRate: product.taxRate || 9,
+      };
+      setItems(newItems);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -117,8 +163,8 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-2 sm:p-4">
+      <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -214,6 +260,29 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
                     )}
                   </div>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {products.length > 0 && (
+                      <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
+                        انتخاب محصول
+                        <select
+                          value={item.productId || ""}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleProductSelect(index, e.target.value);
+                            } else {
+                              handleItemChange(index, "productId", "");
+                            }
+                          }}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                        >
+                          <option value="">انتخاب محصول</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name} - {new Intl.NumberFormat("fa-IR").format(product.unitPrice)} {product.currency === "IRR" ? "تومان" : "دلار"}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
                       عنوان آیتم *
                       <input
@@ -250,12 +319,15 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
                       />
                     </label>
                     <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-                      قیمت واحد (ریال) *
+                      قیمت واحد (تومان) *
                       <input
                         type="number"
                         placeholder="مثال: 18000000"
-                        value={item.unitPrice}
-                        onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
+                        value={item.unitPrice || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          handleItemChange(index, "unitPrice", val === "" ? 0 : parseFloat(val) || 0);
+                        }}
                         min="0"
                         required
                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
@@ -274,12 +346,15 @@ export function InvoiceCreateModal({ isOpen, onClose, customers, marketers = [] 
                       />
                     </label>
                     <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-                      تخفیف (ریال)
+                      تخفیف (تومان)
                       <input
                         type="number"
                         placeholder="مثال: 1000000"
-                        value={item.discount}
-                        onChange={(e) => handleItemChange(index, "discount", parseFloat(e.target.value) || 0)}
+                        value={item.discount || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          handleItemChange(index, "discount", val === "" ? 0 : parseFloat(val) || 0);
+                        }}
                         min="0"
                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                       />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { apiClient } from "@/lib/utils/api-client";
 import type { VisitDetail } from "@/lib/services/visits.service";
 import { VisitEditModal } from "./visit-edit-modal";
@@ -51,6 +52,8 @@ export function VisitDetailModal({ visitId, isOpen, onClose, onSuccess }: VisitD
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [invoices, setInvoices] = useState<Array<{ id: string; number: string; status: string; grandTotal: number; currency: string }>>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   useEffect(() => {
     if (isOpen && visitId) {
@@ -73,6 +76,39 @@ export function VisitDetailModal({ visitId, isOpen, onClose, onSuccess }: VisitD
                 : null,
             };
             setVisit(visitData);
+            
+            // بارگذاری پیش‌فاکتورهای مرتبط
+            if (visitData.relatedInvoiceIds && visitData.relatedInvoiceIds.length > 0) {
+              setLoadingInvoices(true);
+              Promise.all(
+                visitData.relatedInvoiceIds.map((invoiceId) =>
+                  apiClient.get(`/invoices/${invoiceId}`).catch(() => null)
+                )
+              )
+                .then((responses) => {
+                  const invoiceData = responses
+                    .filter((r): r is { success: true; data: any } => r !== null && r.success === true && 'data' in r && r.data !== undefined)
+                    .map((r) => {
+                      const invoice = r.data as any;
+                      return {
+                        id: invoice._id || invoice.id,
+                        number: invoice.number || invoice._id || invoice.id,
+                        status: invoice.status,
+                        grandTotal: invoice.grandTotal,
+                        currency: invoice.currency,
+                      };
+                    });
+                  setInvoices(invoiceData);
+                })
+                .catch((err) => {
+                  console.error("Error loading invoices:", err);
+                })
+                .finally(() => {
+                  setLoadingInvoices(false);
+                });
+            } else {
+              setInvoices([]);
+            }
           } else {
             setError("خطا در بارگذاری جزئیات ویزیت");
           }
@@ -206,6 +242,58 @@ export function VisitDetailModal({ visitId, isOpen, onClose, onSuccess }: VisitD
                     </p>
                   )}
                 </div>
+              </section>
+            )}
+
+            {/* پیش‌فاکتورهای مرتبط */}
+            {visit.relatedInvoiceIds && visit.relatedInvoiceIds.length > 0 && (
+              <section>
+                <h3 className="mb-2 text-sm font-semibold text-slate-800">پیش‌فاکتورهای مرتبط</h3>
+                {loadingInvoices ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    در حال بارگذاری...
+                  </div>
+                ) : invoices.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {invoices.map((invoice) => (
+                      <Link
+                        key={invoice.id}
+                        href={`/dashboard/invoices/${invoice.id}`}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-100 hover:border-primary-300"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium">شماره:</span>
+                          <span>{invoice.number}</span>
+                          <span className="text-slate-400">|</span>
+                          <span className="font-medium">وضعیت:</span>
+                          <span className={`rounded-full px-2 py-1 text-xs ${
+                            invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" :
+                            invoice.status === "SENT" ? "bg-blue-100 text-blue-700" :
+                            invoice.status === "OVERDUE" ? "bg-rose-100 text-rose-700" :
+                            "bg-slate-100 text-slate-700"
+                          }`}>
+                            {invoice.status === "PAID" ? "پرداخت شده" :
+                             invoice.status === "SENT" ? "ارسال شده" :
+                             invoice.status === "OVERDUE" ? "معوق" :
+                             invoice.status === "DRAFT" ? "پیش‌نویس" : invoice.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">
+                            {new Intl.NumberFormat("fa-IR").format(invoice.grandTotal)} {invoice.currency === "IRR" ? "تومان" : "دلار"}
+                          </span>
+                          <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    پیش‌فاکتوری یافت نشد
+                  </div>
+                )}
               </section>
             )}
 

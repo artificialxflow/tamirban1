@@ -17,10 +17,9 @@ cat > .env << 'EOF'
 MONGODB_URI=mongodb://tamirban_tamirban1:Ronak123Ronak@178.239.147.121:27017/tamirban_tamirban1
 MONGODB_DB_NAME=tamirban_tamirban1
 NODE_ENV=production
-PORT=3124
-NEXT_PUBLIC_SITE_URL=https://tamirban1.ir
+PORT=8729
+NEXT_PUBLIC_SITE_URL=https://samtamir.ir
 JWT_SECRET=ey-name-to-behtarin-saraghaz-ey-name-to-behtarin-saraghaz
-OTP_TEST_CODE=0000
 OTP_EXPIRATION_MINUTES=5
 EOF
 

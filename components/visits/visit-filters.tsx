@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import type { VisitStatus } from "@/lib/types";
+import type { VisitStatus, VisitType } from "@/lib/types";
 import { PersianDatePicker } from "./persian-date-picker";
 
 const STATUS_OPTIONS: { value: VisitStatus | ""; label: string }[] = [
@@ -20,6 +20,7 @@ export function VisitFilters() {
   const [customerId, setCustomerId] = useState(searchParams.get("customerId") || "");
   const [marketerId, setMarketerId] = useState(searchParams.get("marketerId") || "");
   const [status, setStatus] = useState<VisitStatus | "">((searchParams.get("status") as VisitStatus) || "");
+  const [visitType, setVisitType] = useState<VisitType | "">((searchParams.get("visitType") as VisitType) || "");
   const [startDate, setStartDate] = useState(searchParams.get("startDate") || "");
   const [endDate, setEndDate] = useState(searchParams.get("endDate") || "");
 
@@ -28,6 +29,7 @@ export function VisitFilters() {
     if (customerId) params.set("customerId", customerId);
     if (marketerId) params.set("marketerId", marketerId);
     if (status) params.set("status", status);
+    if (visitType) params.set("visitType", visitType);
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
     router.push(`/dashboard/visits?${params.toString()}`);
@@ -37,6 +39,7 @@ export function VisitFilters() {
     setCustomerId("");
     setMarketerId("");
     setStatus("");
+    setVisitType("");
     setStartDate("");
     setEndDate("");
     router.push("/dashboard/visits");
@@ -72,6 +75,15 @@ export function VisitFilters() {
             {option.label}
           </option>
         ))}
+      </select>
+      <select
+        value={visitType}
+        onChange={(e) => setVisitType(e.target.value as VisitType | "")}
+        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+      >
+        <option value="">همه انواع</option>
+        <option value="IN_PERSON">حضوری</option>
+        <option value="PHONE">تلفنی</option>
       </select>
       <PersianDatePicker
         value={startDate}

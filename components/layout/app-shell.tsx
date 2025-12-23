@@ -29,6 +29,9 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { name: "بازاریاب‌ها", href: "/dashboard/marketers", requiredPermission: "marketers:read" },
   { name: "ویزیت‌ها", href: "/dashboard/visits", requiredPermission: "visits:read" },
   { name: "پیش‌فاکتورها", href: "/dashboard/invoices", requiredPermission: "invoices:read" },
+  { name: "محصولات", href: "/dashboard/products", requiredPermission: "products:read" },
+  { name: "تسک‌ها", href: "/dashboard/tasks", requiredPermission: "tasks:read" },
+  { name: "استوری‌ها", href: "/dashboard/stories", requiredPermission: "stories:read" },
   { name: "پیامک‌ها", href: "/dashboard/sms" },
   { name: "گزارش‌ها", href: "/dashboard/reports", requiredPermission: "reports:read" },
   { name: "تنظیمات", href: "/dashboard/settings", allowedRoles: ["SUPER_ADMIN"] },
@@ -96,8 +99,8 @@ export function AppShell({
     <aside className="flex w-full flex-col gap-6 rounded-3xl border-2 border-slate-300 bg-linear-to-br from-white to-slate-50 p-6 shadow-lg lg:w-64">
       <header className="flex items-center justify-between rounded-2xl border-2 border-primary-200 bg-primary-50 p-4">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary-600">TamirBan CRM</span>
-          <span className="text-xl font-bold text-slate-800">تعمیربان</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-primary-600">SamTamir CRM</span>
+          <span className="text-xl font-bold text-slate-800">سام‌تعمیر</span>
         </div>
         <span
           style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
@@ -211,7 +214,7 @@ export function AppShell({
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-3 text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-800"
             aria-expanded={isMenuOpen}
-            aria-controls="tamirban-sidebar"
+            aria-controls="samtamir-sidebar"
             aria-label={isMenuOpen ? "بستن منو" : "باز کردن منو"}
           >
             {isMenuOpen ? (
@@ -226,7 +229,7 @@ export function AppShell({
           </button>
         </div>
 
-        <div className="hidden w-full max-w-[260px] lg:flex lg:shrink-0" id="tamirban-sidebar">
+        <div className="hidden w-full max-w-[260px] lg:flex lg:shrink-0" id="samtamir-sidebar">
           {sidebar}
         </div>
 
@@ -261,7 +264,7 @@ export function AppShell({
             onClick={() => setIsMenuOpen(false)}
             aria-label="بستن منو"
           />
-          <div className="relative z-10 ml-auto m-4 w-full max-w-xs" id="tamirban-sidebar">
+          <div className="relative z-10 ml-auto m-4 w-full max-w-xs" id="samtamir-sidebar">
             {sidebar}
           </div>
         </div>

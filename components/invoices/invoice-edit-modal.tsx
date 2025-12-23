@@ -198,8 +198,8 @@ export function InvoiceEditModal({
 
   return (
     <ProtectedComponent permission="invoices:write" showMessage>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-        <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-2 sm:p-4">
+        <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
           <button
             onClick={onClose}
             className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -338,12 +338,15 @@ export function InvoiceEditModal({
                         />
                       </label>
                       <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-                        قیمت واحد *
+                        قیمت واحد (تومان) *
                         <input
                           type="number"
                           placeholder="مثال: 100000"
-                          value={item.unitPrice}
-                          onChange={(e) => handleItemChange(index, "unitPrice", parseFloat(e.target.value) || 0)}
+                          value={item.unitPrice || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleItemChange(index, "unitPrice", val === "" ? 0 : parseFloat(val) || 0);
+                          }}
                           min="0"
                           step="1000"
                           required
@@ -351,12 +354,15 @@ export function InvoiceEditModal({
                         />
                       </label>
                       <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-                        تخفیف
+                        تخفیف (تومان)
                         <input
                           type="number"
                           placeholder="مثال: 5000"
-                          value={item.discount}
-                          onChange={(e) => handleItemChange(index, "discount", parseFloat(e.target.value) || 0)}
+                          value={item.discount || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleItemChange(index, "discount", val === "" ? 0 : parseFloat(val) || 0);
+                          }}
                           min="0"
                           step="1000"
                           className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"

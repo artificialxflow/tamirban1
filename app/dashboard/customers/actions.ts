@@ -9,6 +9,7 @@ import type { GeoLocation } from "@/lib/types";
 export type CreateCustomerFormState = {
   success: boolean;
   message: string | null;
+  customerId?: string;
 };
 
 export async function createCustomerAction(
@@ -18,9 +19,24 @@ export async function createCustomerAction(
   try {
     const geoLocation = extractGeoLocationFromForm(formData);
 
+    // پردازش phones
+    const phonesParam = formData.get("phones");
+    let phones: string[] | undefined;
+    if (phonesParam) {
+      try {
+        phones = JSON.parse(phonesParam as string);
+      } catch {
+        // اگر JSON parse نشد، به عنوان string split کن
+        phones = (phonesParam as string).split(",").map((p) => p.trim()).filter(Boolean);
+      }
+    }
+    
+    // برای backward compatibility، اگر phones موجود نیست از phone استفاده کن
+    const phoneParam = formData.get("phone");
+    
     const payload: Record<string, unknown> = {
       displayName: formData.get("displayName"),
-      phone: formData.get("phone"),
+      phones: phones && phones.length > 0 ? phones : (phoneParam ? [phoneParam] : undefined),
       city: formData.get("city") || undefined,
       status: formData.get("status"),
       tags: (formData.get("tags") as string | null)
@@ -34,13 +50,14 @@ export async function createCustomerAction(
       payload.geoLocation = geoLocation;
     }
 
-    await createCustomer(payload);
+    const customer = await createCustomer(payload);
     revalidatePath("/dashboard/customers");
     revalidatePath("/dashboard"); // Also refresh dashboard
 
     return {
       success: true,
       message: "مشتری با موفقیت ثبت شد.",
+      customerId: customer?.id,
     };
   } catch (error) {
     if (error instanceof ZodError) {
@@ -71,9 +88,24 @@ export async function updateCustomerAction(
 
     const geoLocation = extractGeoLocationFromForm(formData, true);
 
+    // پردازش phones
+    const phonesParam = formData.get("phones");
+    let phones: string[] | undefined;
+    if (phonesParam) {
+      try {
+        phones = JSON.parse(phonesParam as string);
+      } catch {
+        // اگر JSON parse نشد، به عنوان string split کن
+        phones = (phonesParam as string).split(",").map((p) => p.trim()).filter(Boolean);
+      }
+    }
+    
+    // برای backward compatibility، اگر phones موجود نیست از phone استفاده کن
+    const phoneParam = formData.get("phone");
+    
     const payload: Record<string, unknown> = {
       displayName: formData.get("displayName"),
-      phone: formData.get("phone"),
+      phones: phones && phones.length > 0 ? phones : (phoneParam ? [phoneParam] : undefined),
       city: formData.get("city") || undefined,
       status: formData.get("status"),
       tags: (formData.get("tags") as string | null)

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "//start:next": "next start",
+    "start": "NODE_ENV=production PORT=8729 node server.js",
     "start:server": "node server.js",
     "lint": "eslint . --ext ts,tsx",
     "lint:fix": "eslint . --ext ts,tsx --fix",
@@ -25,6 +26,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {

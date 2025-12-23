@@ -150,10 +150,10 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
         doc.text(item.title.substring(0, 30), 50, currentY);
         doc.text(String(item.quantity), 50 + colWidths.title, currentY);
         doc.text(item.unit, 50 + colWidths.title + colWidths.quantity, currentY);
-        doc.text(formatNumber(item.unitPrice), 50 + colWidths.title + colWidths.quantity + colWidths.unit, currentY);
-        doc.text(formatNumber(item.discount || 0), 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice, currentY);
-        doc.text(formatNumber(itemTax), 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount, currentY);
-        doc.text(formatNumber(itemFinalTotal), 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount + colWidths.tax, currentY);
+        doc.text(`${formatNumber(item.unitPrice)} تومان`, 50 + colWidths.title + colWidths.quantity + colWidths.unit, currentY);
+        doc.text(`${formatNumber(item.discount || 0)} تومان`, 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice, currentY);
+        doc.text(`${formatNumber(itemTax)} تومان`, 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount, currentY);
+        doc.text(`${formatNumber(itemFinalTotal)} تومان`, 50 + colWidths.title + colWidths.quantity + colWidths.unit + colWidths.unitPrice + colWidths.discount + colWidths.tax, currentY);
 
         currentY += itemHeight;
         doc.y = currentY;
@@ -166,23 +166,23 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
       doc.fontSize(12);
       setFont("Times-Roman");
       doc.text("جمع کل:", 400, summaryY);
-      doc.text(formatNumber(invoice.subtotal), 500, summaryY);
+      doc.text(`${formatNumber(invoice.subtotal)} تومان`, 500, summaryY);
       doc.moveDown(0.5);
 
       if (invoice.discountTotal && invoice.discountTotal > 0) {
         doc.text("تخفیف:", 400, doc.y);
-        doc.text(formatNumber(invoice.discountTotal), 500, doc.y);
+        doc.text(`${formatNumber(invoice.discountTotal)} تومان`, 500, doc.y);
         doc.moveDown(0.5);
       }
 
       doc.text("مالیات:", 400, doc.y);
-      doc.text(formatNumber(invoice.taxTotal), 500, doc.y);
+      doc.text(`${formatNumber(invoice.taxTotal)} تومان`, 500, doc.y);
       doc.moveDown(0.5);
 
       doc.fontSize(14);
       setFont("Times-Bold");
       doc.text("مبلغ قابل پرداخت:", 400, doc.y);
-      doc.text(formatNumber(invoice.grandTotal), 500, doc.y);
+      doc.text(`${formatNumber(invoice.grandTotal)} تومان`, 500, doc.y);
       doc.moveDown(1);
 
       // وضعیت پرداخت
@@ -205,7 +205,9 @@ export async function generateInvoicePDF(invoice: Invoice, customerName?: string
 
       doc.end();
     } catch (error) {
-      reject(error);
+      console.error("[PDF Generator] Error in PDF generation:", error);
+      const errorMessage = error instanceof Error ? error.message : "خطای ناشناخته در تولید PDF";
+      reject(new Error(`خطا در تولید PDF: ${errorMessage}`));
     }
   });
 }

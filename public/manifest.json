@@ -1,7 +1,7 @@
 {
-  "name": "تعمیربان CRM",
-  "short_name": "تعمیربان",
-  "description": "سیستم مدیریت مشتریان، ویزیت‌ها و پیش‌فاکتورها",
+  "name": "سام‌تعمیر CRM",
+  "short_name": "سام‌تعمیر",
+  "description": "سام‌تعمیر، سیستم مدیریت مشتریان، ویزیت‌ها و پیش‌فاکتورها",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

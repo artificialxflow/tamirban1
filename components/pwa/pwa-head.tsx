@@ -37,7 +37,7 @@ export function PWAHead() {
     // Apple Web App
     addMetaTag("apple-mobile-web-app-capable", "yes");
     addMetaTag("apple-mobile-web-app-status-bar-style", "default");
-    addMetaTag("apple-mobile-web-app-title", "تعمیربان");
+    addMetaTag("apple-mobile-web-app-title", "سام‌تعمیر");
 
     // Apple touch icon
     addLinkTag("apple-touch-icon", "/icons/icon-180.png");

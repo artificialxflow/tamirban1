@@ -46,10 +46,20 @@ export function requireRole(...allowedRoles: RoleKey[]) {
     }
 
     if (!allowedRoles.includes(user.role)) {
+      const allowedRolesText = allowedRoles.map((r) => {
+        const roleNames: Record<RoleKey, string> = {
+          SUPER_ADMIN: "مدیر کل",
+          FINANCE_MANAGER: "مدیر مالی",
+          MARKETER: "بازاریاب",
+          CUSTOMER: "مشتری",
+        };
+        return roleNames[r];
+      }).join("، ");
+      
       return {
         success: false,
         response: errorResponse(
-          "شما دسترسی لازم برای این عملیات را ندارید.",
+          `شما دسترسی لازم برای این عملیات را ندارید. نقش‌های مجاز: ${allowedRolesText}`,
           ApiErrorCode.FORBIDDEN,
           403,
         ),
@@ -80,10 +90,40 @@ export function requirePermission(permission: string) {
     const hasPermission = await checkPermission(authResult.user.sub, permission);
 
     if (!hasPermission) {
+      // دریافت نام permission برای نمایش بهتر
+      const permissionNames: Record<string, string> = {
+        "users:read": "مشاهده کاربران",
+        "users:write": "ایجاد/ویرایش کاربران",
+        "users:delete": "حذف کاربران",
+        "customers:read": "مشاهده مشتریان",
+        "customers:write": "ایجاد/ویرایش مشتریان",
+        "customers:delete": "حذف مشتریان",
+        "visits:read": "مشاهده ویزیت‌ها",
+        "visits:write": "ایجاد/ویرایش ویزیت‌ها",
+        "visits:delete": "حذف ویزیت‌ها",
+        "invoices:read": "مشاهده پیش‌فاکتورها",
+        "invoices:write": "ایجاد/ویرایش پیش‌فاکتورها",
+        "invoices:delete": "حذف پیش‌فاکتورها",
+        "marketers:read": "مشاهده بازاریاب‌ها",
+        "marketers:write": "ایجاد/ویرایش بازاریاب‌ها",
+        "marketers:delete": "حذف بازاریاب‌ها",
+        "products:read": "مشاهده محصولات",
+        "products:write": "ایجاد/ویرایش محصولات",
+        "products:delete": "حذف محصولات",
+        "tasks:read": "مشاهده تسک‌ها",
+        "tasks:write": "ایجاد/ویرایش تسک‌ها",
+        "tasks:delete": "حذف تسک‌ها",
+        "reports:read": "مشاهده گزارش‌ها",
+        "settings:read": "مشاهده تنظیمات",
+        "settings:write": "ویرایش تنظیمات",
+      };
+      
+      const permissionLabel = permissionNames[permission] || permission;
+      
       return {
         success: false,
         response: errorResponse(
-          "شما دسترسی لازم برای این عملیات را ندارید.",
+          `شما دسترسی لازم برای این عملیات را ندارید. دسترسی مورد نیاز: ${permissionLabel}`,
           ApiErrorCode.FORBIDDEN,
           403,
         ),

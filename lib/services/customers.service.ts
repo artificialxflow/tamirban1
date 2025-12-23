@@ -18,10 +18,12 @@ export type CustomerSummary = {
   grade?: "A" | "B" | "C" | "D";
   monthlyRevenue?: number;
   tags: string[];
+  distance?: number; // فاصله بر حسب متر (فقط در location-based search)
 };
 
 export type CustomerDetail = CustomerSummary & {
-  phone?: string;
+  phone?: string; // برای backward compatibility
+  phones?: string[]; // لیست شماره‌های تلفن
   loyaltyScore?: number;
   notes?: string;
   geoLocation?: GeoLocation;
@@ -34,6 +36,12 @@ export type CustomerListFilters = {
   marketerId?: string;
   search?: string;
   city?: string;
+  tags?: string[]; // فیلتر بر اساس برچسب‌ها
+  nearbyLocation?: {
+    latitude: number;
+    longitude: number;
+    maxDistance?: number; // در متر (پیش‌فرض: 10000 متر = 10 کیلومتر)
+  };
   page?: number;
   limit?: number;
 };
@@ -49,7 +57,9 @@ const geoLocationSchema = z.object({
 const createCustomerSchema = z.object({
   displayName: z.string().min(3, "نام مشتری باید حداقل سه کاراکتر باشد"),
   legalName: z.string().optional(),
-  phone: z.string().min(10, "شماره موبایل معتبر وارد کنید"),
+  phone: z.string().min(10, "شماره موبایل معتبر وارد کنید").optional(), // برای backward compatibility
+  phones: z.array(z.string().min(10, "شماره موبایل معتبر وارد کنید")).optional(), // لیست شماره‌ها
+  primaryPhone: z.string().min(10, "شماره موبایل معتبر وارد کنید").optional(), // شماره اصلی
   city: z.string().optional(),
   status: z.enum(customerStatusValues),
   tags: z.array(z.string()).default([]),
@@ -61,13 +71,23 @@ const createCustomerSchema = z.object({
   assignedMarketerName: z.string().optional(),
   notes: z.string().optional(),
   geoLocation: geoLocationSchema.optional(),
-});
+}).refine(
+  (data) => {
+    // حداقل یکی از phone یا phones باید وجود داشته باشد
+    return data.phone || (data.phones && data.phones.length > 0);
+  },
+  {
+    message: "حداقل یک شماره تلفن الزامی است",
+  }
+);
 
 const updateCustomerSchema = z
   .object({
     displayName: z.string().min(3, "نام مشتری باید حداقل سه کاراکتر باشد").optional(),
     legalName: z.string().optional(),
-    phone: z.string().min(10, "شماره موبایل معتبر وارد کنید").optional(),
+    phone: z.string().min(10, "شماره موبایل معتبر وارد کنید").optional(), // برای backward compatibility
+    phones: z.array(z.string().min(10, "شماره موبایل معتبر وارد کنید")).optional(), // لیست شماره‌ها
+    primaryPhone: z.string().min(10, "شماره موبایل معتبر وارد کنید").optional(), // شماره اصلی
     city: z.string().optional().nullable(),
     status: z.enum(customerStatusValues).optional(),
     tags: z.array(z.string()).optional(),
@@ -105,8 +125,29 @@ export async function listCustomerSummaries(
       { displayName: regex },
       { code: regex },
       { "contact.phone": regex },
+      { "contact.phones": { $in: [regex] } }, // جستجو در لیست شماره‌ها
+      { "contact.primaryPhone": regex },
       { "contact.email": regex },
     ];
+  }
+
+  // Geospatial query برای جستجوی نزدیک‌ترین مشتری‌ها
+  let sortOptions: { [key: string]: 1 | -1 } = { createdAt: -1 };
+  let calculateDistance = false;
+  let userLocation: { latitude: number; longitude: number } | null = null;
+  let maxDistance = Infinity;
+
+  if (filters.nearbyLocation) {
+    const { latitude, longitude, maxDistance: maxDist = 10000 } = filters.nearbyLocation;
+    userLocation = { latitude, longitude };
+    maxDistance = maxDist;
+    calculateDistance = true;
+    
+    // فقط مشتری‌هایی که geoLocation دارند
+    (query as any).geoLocation = { $exists: true, $ne: null };
+    
+    // برای geospatial queries، sort بر اساس فاصله است (در JavaScript محاسبه می‌شود)
+    sortOptions = {}; // بعداً بر اساس فاصله sort می‌کنیم
   }
 
   const page = filters.page || 1;
@@ -118,13 +159,34 @@ export async function listCustomerSummaries(
 
   // دریافت داده‌ها با pagination
   const customers = await customersRepository.findMany(query as never, {
-    sort: { createdAt: -1 },
+    sort: sortOptions,
     skip,
     limit,
   });
 
-  return {
-    data: customers.map((customer) => ({
+  // تابع محاسبه فاصله (Haversine formula)
+  const calculateDistanceInMeters = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number => {
+    const R = 6371000; // شعاع زمین بر حسب متر
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // محاسبه فاصله و فیلتر کردن بر اساس maxDistance
+  let customersWithDistance = customers.map((customer) => {
+    const summary: CustomerSummary = {
       id: customer._id,
       code: customer.code,
       name: customer.displayName,
@@ -135,8 +197,40 @@ export async function listCustomerSummaries(
       grade: customer.grade,
       monthlyRevenue: customer.revenueMonthly,
       tags: customer.tags ?? [],
-    })),
-    total,
+    };
+
+    // محاسبه فاصله اگر location-based search فعال باشد
+    if (calculateDistance && userLocation && customer.geoLocation) {
+      summary.distance = calculateDistanceInMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        customer.geoLocation.latitude,
+        customer.geoLocation.longitude,
+      );
+    }
+
+    return summary;
+  });
+
+  // فیلتر کردن بر اساس maxDistance
+  if (calculateDistance) {
+    customersWithDistance = customersWithDistance.filter(
+      (customer) => customer.distance !== undefined && customer.distance <= maxDistance,
+    );
+  }
+
+  // Sort بر اساس فاصله اگر location-based search فعال باشد
+  if (calculateDistance) {
+    customersWithDistance.sort((a, b) => {
+      const distA = a.distance ?? Infinity;
+      const distB = b.distance ?? Infinity;
+      return distA - distB;
+    });
+  }
+
+  return {
+    data: customersWithDistance,
+    total: calculateDistance ? customersWithDistance.length : total,
     page,
     limit,
   };
@@ -159,10 +253,11 @@ export async function getCustomerDetail(customerId: string): Promise<CustomerDet
     grade: customer.grade,
     monthlyRevenue: customer.revenueMonthly,
     tags: customer.tags ?? [],
-    phone: customer.contact.phone,
+    phone: customer.contact.primaryPhone || customer.contact.phones?.[0] || customer.contact.phone,
+    phones: customer.contact.phones || (customer.contact.phone ? [customer.contact.phone] : []),
     loyaltyScore: customer.loyaltyScore,
     notes: customer.notes,
-    geoLocation: customer.geoLocation,
+    geoLocation: customer.geoLocation || undefined,
   };
 }
 
@@ -170,9 +265,34 @@ export async function createCustomer(input: unknown) {
   const payload = createCustomerSchema.parse(input);
 
   const now = new Date();
-  const normalizedPhone = normalizePhone(payload.phone);
+  
+  // پردازش شماره‌های تلفن
+  let phones: string[] = [];
+  let primaryPhone: string | undefined;
+  
+  if (payload.phones && payload.phones.length > 0) {
+    // استفاده از phones اگر موجود باشد
+    phones = payload.phones.map((p) => normalizePhone(p));
+    primaryPhone = phones[0];
+  } else if (payload.phone) {
+    // استفاده از phone برای backward compatibility
+    const normalized = normalizePhone(payload.phone);
+    phones = [normalized];
+    primaryPhone = normalized;
+  } else if (payload.primaryPhone) {
+    // استفاده از primaryPhone
+    primaryPhone = normalizePhone(payload.primaryPhone);
+    phones = [primaryPhone];
+  }
+  
+  if (phones.length === 0) {
+    throw new Error("حداقل یک شماره تلفن الزامی است");
+  }
+  
   const contact: ContactInfo = {
-    phone: normalizedPhone,
+    phones,
+    primaryPhone,
+    phone: primaryPhone, // برای backward compatibility
   };
 
   if (payload.city) {
@@ -225,8 +345,37 @@ export async function updateCustomer(customerId: string, input: unknown) {
     updateDoc.legalName = payload.legalName;
   }
 
-  if (payload.phone !== undefined) {
-    contactUpdates.phone = normalizePhone(payload.phone);
+  // پردازش شماره‌های تلفن
+  if (payload.phones !== undefined) {
+    // استفاده از phones اگر موجود باشد
+    const normalizedPhones = payload.phones.map((p) => normalizePhone(p));
+    contactUpdates.phones = normalizedPhones;
+    contactUpdates.primaryPhone = normalizedPhones[0];
+    contactUpdates.phone = normalizedPhones[0]; // برای backward compatibility
+    contactChanged = true;
+  } else if (payload.phone !== undefined) {
+    // استفاده از phone برای backward compatibility
+    const normalized = normalizePhone(payload.phone);
+    contactUpdates.phone = normalized;
+    contactUpdates.primaryPhone = normalized;
+    // اگر phones موجود نیست، آن را از phone بساز
+    if (!contactUpdates.phones) {
+      contactUpdates.phones = [normalized];
+    } else {
+      // اگر phones موجود است، اولین را به‌روزرسانی کن
+      contactUpdates.phones[0] = normalized;
+    }
+    contactChanged = true;
+  } else if (payload.primaryPhone !== undefined) {
+    // استفاده از primaryPhone
+    const normalized = normalizePhone(payload.primaryPhone);
+    contactUpdates.primaryPhone = normalized;
+    contactUpdates.phone = normalized; // برای backward compatibility
+    if (!contactUpdates.phones) {
+      contactUpdates.phones = [normalized];
+    } else {
+      contactUpdates.phones[0] = normalized;
+    }
     contactChanged = true;
   }
 
@@ -272,7 +421,7 @@ export async function updateCustomer(customerId: string, input: unknown) {
   }
 
   if (payload.geoLocation !== undefined) {
-    if (payload.geoLocation === null) {
+    if (payload.geoLocation === null || payload.geoLocation === undefined) {
       delete (updateDoc as Partial<Customer>).geoLocation;
     } else {
       updateDoc.geoLocation = payload.geoLocation;
@@ -295,7 +444,7 @@ export async function updateCustomer(customerId: string, input: unknown) {
     },
   };
 
-  if (payload.geoLocation === null) {
+  if (payload.geoLocation === null || payload.geoLocation === undefined) {
     updatePayload.$unset = {
       ...(updatePayload.$unset ?? {}),
       geoLocation: "",

@@ -59,7 +59,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"phone\": \"09123456789\",\n  \"code\": \"0000\"\n}"
+              "raw": "{\n  \"phone\": \"09123456789\",\n  \"code\": \"<OTP_FROM_SMS>\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/otp/verify",

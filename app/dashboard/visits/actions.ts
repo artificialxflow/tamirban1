@@ -25,6 +25,8 @@ export async function createVisitAction(
     const notes = formData.get("notes") as string;
     const topics = formData.get("topics") as string;
     const followUpAction = formData.get("followUpAction") as string;
+    const nextMeetingAt = formData.get("nextMeetingAt") as string;
+    const visitType = formData.get("visitType") as "IN_PERSON" | "PHONE" | null;
 
     if (!customerId || !marketerId || !scheduledAt) {
       return {
@@ -53,6 +55,8 @@ export async function createVisitAction(
       notes: notes || undefined,
       topics: topics ? topics.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
       followUpAction: followUpAction || undefined,
+      nextMeetingAt: nextMeetingAt ? new Date(nextMeetingAt) : undefined,
+      visitType: visitType || undefined,
       locationSnapshot,
     };
 
@@ -88,6 +92,8 @@ export async function updateVisitAction(
     const notes = formData.get("notes") as string;
     const topics = formData.get("topics") as string;
     const followUpAction = formData.get("followUpAction") as string;
+    const nextMeetingAt = formData.get("nextMeetingAt") as string;
+    const visitType = formData.get("visitType") as "IN_PERSON" | "PHONE" | null;
 
     if (!customerId || !marketerId || !scheduledAt) {
       return {
@@ -116,6 +122,8 @@ export async function updateVisitAction(
       notes: notes || undefined,
       topics: topics ? topics.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
       followUpAction: followUpAction || undefined,
+      nextMeetingAt: nextMeetingAt ? new Date(nextMeetingAt) : undefined,
+      visitType: visitType || undefined,
       locationSnapshot,
     };
 

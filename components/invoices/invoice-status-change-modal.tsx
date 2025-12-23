@@ -34,6 +34,14 @@ export function InvoiceStatusChangeModal({
   const [status, setStatus] = useState<InvoiceStatus>(invoice.status);
   const [paidAt, setPaidAt] = useState<string>("");
   const [paymentReference, setPaymentReference] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CHECK" | "TRANSFER">("CASH");
+  const [checkAmount, setCheckAmount] = useState<string>("");
+  const [checkDate, setCheckDate] = useState<string>("");
+  const [checkOwner, setCheckOwner] = useState<string>("");
+  const [checkNumber, setCheckNumber] = useState<string>("");
+  const [checkStatus, setCheckStatus] = useState<"PENDING" | "SETTLED" | "BOUNCED">("PENDING");
+  const [transferReference, setTransferReference] = useState<string>("");
+  const [cashAmount, setCashAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -45,6 +53,28 @@ export function InvoiceStatusChangeModal({
       setPaymentReference(invoice.paymentReference || "");
       setError(null);
       setShowConfirm(false);
+      
+      // بارگذاری اطلاعات پرداخت موجود
+      if (invoice.paymentInfo) {
+        setPaymentMethod(invoice.paymentInfo.method);
+        setCheckAmount(invoice.paymentInfo.checkAmount?.toString() || "");
+        setCheckDate(invoice.paymentInfo.checkDate ? new Date(invoice.paymentInfo.checkDate).toISOString().slice(0, 16) : "");
+        setCheckOwner(invoice.paymentInfo.checkOwner || "");
+        setCheckNumber(invoice.paymentInfo.checkNumber || "");
+        setCheckStatus(invoice.paymentInfo.status || "PENDING");
+        setTransferReference(invoice.paymentInfo.transferReference || "");
+        setCashAmount(invoice.paymentInfo.cashAmount?.toString() || "");
+      } else {
+        // Reset to defaults
+        setPaymentMethod("CASH");
+        setCheckAmount("");
+        setCheckDate("");
+        setCheckOwner("");
+        setCheckNumber("");
+        setCheckStatus("PENDING");
+        setTransferReference("");
+        setCashAmount("");
+      }
     }
   }, [isOpen, invoice]);
 
@@ -229,6 +259,116 @@ export function InvoiceStatusChangeModal({
                         className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
                       />
                     </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-800">
+                        روش پرداخت <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "CHECK" | "TRANSFER")}
+                        className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                      >
+                        <option value="CASH">نقدی</option>
+                        <option value="CHECK">چک</option>
+                        <option value="TRANSFER">انتقال بانکی</option>
+                      </select>
+                    </div>
+
+                    {paymentMethod === "CASH" && (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-800">
+                          مبلغ نقدی (تومان)
+                        </label>
+                        <input
+                          type="number"
+                          value={cashAmount}
+                          onChange={(e) => setCashAmount(e.target.value)}
+                          placeholder="مثال: 10000000"
+                          className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {paymentMethod === "CHECK" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-slate-800">
+                            مبلغ چک (تومان)
+                          </label>
+                          <input
+                            type="number"
+                            value={checkAmount}
+                            onChange={(e) => setCheckAmount(e.target.value)}
+                            placeholder="مثال: 10000000"
+                            className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-slate-800">
+                            تاریخ چک
+                          </label>
+                          <PersianDateTimePicker
+                            name="checkDate"
+                            defaultValue={checkDate || ""}
+                            onChange={(value) => setCheckDate(value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-slate-800">
+                            صاحب چک
+                          </label>
+                          <input
+                            type="text"
+                            value={checkOwner}
+                            onChange={(e) => setCheckOwner(e.target.value)}
+                            placeholder="نام صاحب چک"
+                            className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-slate-800">
+                            شماره چک
+                          </label>
+                          <input
+                            type="text"
+                            value={checkNumber}
+                            onChange={(e) => setCheckNumber(e.target.value)}
+                            placeholder="شماره چک"
+                            className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-slate-800">
+                            وضعیت چک
+                          </label>
+                          <select
+                            value={checkStatus}
+                            onChange={(e) => setCheckStatus(e.target.value as "PENDING" | "SETTLED" | "BOUNCED")}
+                            className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                          >
+                            <option value="PENDING">در انتظار</option>
+                            <option value="SETTLED">تسویه شده</option>
+                            <option value="BOUNCED">برگشت خورده</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === "TRANSFER" && (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-800">
+                          شماره مرجع انتقال
+                        </label>
+                        <input
+                          type="text"
+                          value={transferReference}
+                          onChange={(e) => setTransferReference(e.target.value)}
+                          placeholder="شماره مرجع انتقال بانکی"
+                          className="w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-primary-500 focus:outline-none"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

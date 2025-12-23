@@ -49,6 +49,7 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [customers, setCustomers] = useState<Array<{ id: string; name: string }>>([]);
   const [marketers, setMarketers] = useState<Array<{ id: string; name: string }>>([]);
 
@@ -129,6 +130,8 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
   };
 
   const handleDownloadPDF = async () => {
+    if (downloadingPDF) return; // جلوگیری از درخواست‌های تکراری
+
     const stored = localStorage.getItem("auth_tokens");
     if (!stored) {
       alert("لطفا دوباره وارد شوید");
@@ -149,6 +152,7 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
       return;
     }
 
+    setDownloadingPDF(true);
     try {
       const response = await fetch(`/api/invoices/${invoice._id}/pdf`, {
         headers: {
@@ -158,18 +162,37 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "خطا در دانلود PDF");
+        const errorMessage = errorData.message || `خطا در دانلود PDF (کد: ${response.status})`;
+        throw new Error(errorMessage);
+      }
+
+      // بررسی Content-Type
+      const contentType = response.headers.get("Content-Type");
+      if (contentType && !contentType.includes("application/pdf")) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "فایل دریافتی PDF نیست");
       }
 
       const blob = await response.blob();
+      
+      // بررسی اندازه فایل
+      if (blob.size === 0) {
+        throw new Error("فایل PDF خالی است");
+      }
       
       // دریافت نام فایل از header یا استفاده از invoiceNumber
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = `invoice-${(invoice.meta?.invoiceNumber as string) || invoice._id}.pdf`;
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
+        // پشتیبانی از filename*=UTF-8''
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''(.+)/);
+        if (utf8Match && utf8Match[1]) {
+          filename = decodeURIComponent(utf8Match[1]);
+        } else {
+          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1];
+          }
         }
       }
 
@@ -182,7 +205,11 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      alert("خطا در دانلود PDF: " + (error instanceof Error ? error.message : "خطای ناشناخته"));
+      const errorMessage = error instanceof Error ? error.message : "خطای ناشناخته";
+      console.error("[Invoice Detail] PDF download error:", error);
+      alert(`خطا در دانلود PDF: ${errorMessage}`);
+    } finally {
+      setDownloadingPDF(false);
     }
   };
 
@@ -195,12 +222,13 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30"
+            disabled={downloadingPDF}
+            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background: "linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(37, 99, 235) 100%)",
             }}
           >
-            دانلود PDF
+            {downloadingPDF ? "در حال دانلود..." : "دانلود PDF"}
           </button>
         </div>
       }
@@ -325,6 +353,91 @@ export function InvoiceDetailView({ invoice }: InvoiceDetailViewProps) {
             </div>
           </div>
         </div>
+
+        {/* Payment Info */}
+        {invoice.paymentInfo && invoice.status === "PAID" && (
+          <div className="rounded-3xl border-2 border-slate-300 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">اطلاعات پرداخت</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">روش پرداخت:</span>
+                <span className="font-semibold text-slate-900">
+                  {invoice.paymentInfo.method === "CASH" ? "نقدی" :
+                   invoice.paymentInfo.method === "CHECK" ? "چک" :
+                   invoice.paymentInfo.method === "TRANSFER" ? "انتقال بانکی" : invoice.paymentInfo.method}
+                </span>
+              </div>
+              
+              {invoice.paymentInfo.method === "CHECK" && (
+                <>
+                  {invoice.paymentInfo.checkAmount && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">مبلغ چک:</span>
+                      <span className="font-semibold text-slate-900">
+                        {formatAmount(invoice.paymentInfo.checkAmount)} {invoice.currency === "IRR" ? "تومان" : "دلار"}
+                      </span>
+                    </div>
+                  )}
+                  {invoice.paymentInfo.checkDate && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">تاریخ چک:</span>
+                      <span className="font-semibold text-slate-900">{formatDate(invoice.paymentInfo.checkDate)}</span>
+                    </div>
+                  )}
+                  {invoice.paymentInfo.checkOwner && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">صاحب چک:</span>
+                      <span className="font-semibold text-slate-900">{invoice.paymentInfo.checkOwner}</span>
+                    </div>
+                  )}
+                  {invoice.paymentInfo.checkNumber && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">شماره چک:</span>
+                      <span className="font-semibold text-slate-900">{invoice.paymentInfo.checkNumber}</span>
+                    </div>
+                  )}
+                  {invoice.paymentInfo.status && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">وضعیت چک:</span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        invoice.paymentInfo.status === "SETTLED" ? "bg-emerald-100 text-emerald-700" :
+                        invoice.paymentInfo.status === "BOUNCED" ? "bg-rose-100 text-rose-700" :
+                        "bg-amber-100 text-amber-700"
+                      }`}>
+                        {invoice.paymentInfo.status === "SETTLED" ? "تسویه شده" :
+                         invoice.paymentInfo.status === "BOUNCED" ? "برگشت خورده" :
+                         "در انتظار"}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {invoice.paymentInfo.method === "TRANSFER" && invoice.paymentInfo.transferReference && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600">شماره مرجع انتقال:</span>
+                  <span className="font-semibold text-slate-900">{invoice.paymentInfo.transferReference}</span>
+                </div>
+              )}
+              
+              {invoice.paymentInfo.method === "CASH" && invoice.paymentInfo.cashAmount && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600">مبلغ نقدی:</span>
+                  <span className="font-semibold text-slate-900">
+                    {formatAmount(invoice.paymentInfo.cashAmount)} {invoice.currency === "IRR" ? "تومان" : "دلار"}
+                  </span>
+                </div>
+              )}
+              
+              {invoice.paidAt && (
+                <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                  <span className="text-slate-600">تاریخ پرداخت:</span>
+                  <span className="font-semibold text-slate-900">{formatDate(invoice.paidAt)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3">

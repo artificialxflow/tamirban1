@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
           {
             key: "Access-Control-Allow-Origin",
             value: process.env.NODE_ENV === "production"
-              ? process.env.NEXT_PUBLIC_SITE_URL || "https://tamirban1.ir"
+              ? process.env.NEXT_PUBLIC_SITE_URL || "https://samtamir.ir"
               : "*", // در development همه دامنه‌ها مجاز هستند
           },
           {

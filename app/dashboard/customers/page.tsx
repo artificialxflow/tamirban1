@@ -5,6 +5,8 @@ import { CustomerList, CustomerCards } from "@/components/customers/customer-lis
 import { CustomerFilters } from "@/components/customers/customer-filters";
 import { CustomerPagination } from "@/components/customers/customer-pagination";
 import { CustomerAddButton } from "@/components/customers/customer-add-button";
+import { CustomerExportButton } from "@/components/customers/customer-export-button";
+import { CustomerInteractions } from "@/components/customers/customer-interactions";
 
 const STATUS_LABELS: Record<CustomerStatus, string> = {
   ACTIVE: "فعال",
@@ -57,6 +59,10 @@ type CustomersPageProps = {
     marketerId?: string;
     page?: string;
     selected?: string;
+    lat?: string;
+    lng?: string;
+    maxDistance?: string;
+    tags?: string;
   }>;
 };
 
@@ -65,17 +71,41 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const page = params.page ? parseInt(params.page, 10) : 1;
   const limit = 20;
 
+  // ساخت nearbyLocation اگر lat و lng موجود باشند
+  let nearbyLocation: { latitude: number; longitude: number; maxDistance?: number } | undefined;
+  if (params.lat && params.lng) {
+    const latitude = parseFloat(params.lat);
+    const longitude = parseFloat(params.lng);
+    if (!isNaN(latitude) && !isNaN(longitude)) {
+      nearbyLocation = { latitude, longitude };
+      if (params.maxDistance) {
+        const maxDistance = parseFloat(params.maxDistance);
+        if (!isNaN(maxDistance)) {
+          nearbyLocation.maxDistance = maxDistance;
+        }
+      }
+    }
+  }
+
+  // پردازش tags parameter
+  const tags = params.tags ? params.tags.split(",").filter(Boolean) : undefined;
+
   const result = await listCustomerSummaries({
     status: params.status as CustomerStatus | undefined,
     marketerId: params.marketerId,
     search: params.search,
     city: params.city,
+    tags,
+    nearbyLocation,
     page,
     limit,
   });
 
   const selectedCustomerId = params.selected || result.data[0]?.id;
   const selectedCustomer = selectedCustomerId ? await getCustomerDetail(selectedCustomerId) : null;
+  
+  // بررسی اینکه آیا location-based search فعال است
+  const hasDistanceData = result.data.some((customer) => customer.distance !== undefined);
 
   return (
     <AppShell
@@ -108,7 +138,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                   {numberFormatter.format(result.data.length)} از {numberFormatter.format(result.total)} مورد
                 </p>
               </div>
-              <div className="text-[12px] text-slate-400">گزارش‌های خروجی به‌زودی</div>
+              <CustomerExportButton />
             </header>
             <div className="relative hidden overflow-x-auto lg:block">
               <table className="w-full min-w-[720px] divide-y divide-slate-100 text-right text-sm text-slate-600">
@@ -118,6 +148,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     <th className="px-4 py-3">نام مشتری</th>
                     <th className="px-4 py-3">بازاریاب مسئول</th>
                     <th className="px-4 py-3">شهر</th>
+                    {hasDistanceData && <th className="px-4 py-3">فاصله</th>}
                     <th className="px-4 py-3">آخرین ویزیت</th>
                     <th className="px-4 py-3">وضعیت</th>
                     <th className="px-4 py-3">امتیاز</th>
@@ -176,7 +207,22 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     <span className="text-xs text-slate-400">آخرین ویزیت: {formatDate(selectedCustomer.lastVisitAt)}</span>
                   </header>
                   <div className="flex flex-col gap-2 text-xs text-slate-500">
-                    <span>شماره تماس: {selectedCustomer.phone ?? "ثبت نشده"}</span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-slate-400">شماره‌های تماس:</span>
+                      {selectedCustomer.phones && selectedCustomer.phones.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {selectedCustomer.phones.map((phone, index) => (
+                            <span key={index} className={index === 0 ? "font-semibold text-slate-700" : "text-slate-600"}>
+                              {phone} {index === 0 && <span className="text-slate-400">(اصلی)</span>}
+                            </span>
+                          ))}
+                        </div>
+                      ) : selectedCustomer.phone ? (
+                        <span className="font-semibold text-slate-700">{selectedCustomer.phone}</span>
+                      ) : (
+                        <span className="text-slate-400">ثبت نشده</span>
+                      )}
+                    </div>
                     {selectedCustomer.tags?.length ? (
                       <div className="flex flex-wrap gap-2">
                         {selectedCustomer.tags.map((tag) => (
@@ -195,6 +241,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     <p className="leading-6 text-slate-600">{selectedCustomer.notes}</p>
                   </section>
                 ) : null}
+
+                <CustomerInteractions customerId={selectedCustomer.id} />
               </>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-sm text-slate-500">

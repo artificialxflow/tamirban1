@@ -43,12 +43,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await requestOtp(phone);
+    await requestOtp(phone);
 
-    // اگر کد در نتیجه وجود داشته باشد (حالت تست بدون SMS واقعی)، آن را برمی‌گردانیم
+    // فقط اطلاعات مربوط به Rate Limit را برمی‌گردانیم؛ کد OTP هرگز در پاسخ API نمایش داده نمی‌شود
     return successResponse(
       {
-        ...(result.code ? { code: result.code } : {}),
         rateLimit: {
           remaining: rateLimitResult.remaining,
           resetAt: rateLimitResult.resetAt,

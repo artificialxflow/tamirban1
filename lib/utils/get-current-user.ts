@@ -1,23 +1,29 @@
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { verifyJwt } from "./jwt";
 import { getUsersCollection } from "@/lib/db";
 import type { AuthTokenPayload } from "@/lib/types";
 
 /**
  * دریافت اطلاعات کاربر فعلی در Server Component
- * از Authorization header تلاش می‌کند
- * توجه: این تابع فقط در صورتی کار می‌کند که token در Authorization header ارسال شده باشد
+ * ابتدا از cookies تلاش می‌کند، سپس از Authorization header
  */
 export async function getCurrentUser(): Promise<{ id: string; role: string } | null> {
   try {
-    const headersList = await headers();
-    const authHeader = headersList.get("authorization");
+    let token: string | null = null;
     
-    if (!authHeader?.startsWith("Bearer ")) {
-      return null;
+    // تلاش برای دریافت token از cookies
+    const cookiesList = await cookies();
+    token = cookiesList.get("accessToken")?.value || null;
+    
+    // اگر در cookies نبود، از Authorization header تلاش کن
+    if (!token) {
+      const headersList = await headers();
+      const authHeader = headersList.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        token = authHeader.substring(7);
+      }
     }
-
-    const token = authHeader.substring(7);
+    
     if (!token) {
       return null;
     }

@@ -48,6 +48,17 @@ function formatRevenue(value?: number) {
   return numberFormatter.format(value);
 }
 
+function formatDistance(distanceInMeters?: number): string {
+  if (!distanceInMeters) {
+    return "";
+  }
+  if (distanceInMeters < 1000) {
+    return `${Math.round(distanceInMeters)} متر`;
+  }
+  const km = distanceInMeters / 1000;
+  return `${km.toFixed(1)} کیلومتر`;
+}
+
 function resolveBadgeClass(status: CustomerStatus) {
   return STATUS_BADGE_CLASS[status] ?? "bg-slate-100 text-slate-600";
 }
@@ -109,6 +120,11 @@ export function CustomerRow({ customer, isSelected = false, onSelect }: Customer
         <td className="px-4 py-3 text-sm font-semibold text-slate-800">{customer.name}</td>
         <td className="px-4 py-3 text-sm text-slate-600">{customer.marketer ?? "نامشخص"}</td>
         <td className="px-4 py-3 text-sm text-slate-600">{customer.city ?? "-"}</td>
+        {customer.distance !== undefined && (
+          <td className="px-4 py-3 text-[13px] font-medium text-primary-600">
+            {formatDistance(customer.distance)}
+          </td>
+        )}
         <td className="px-4 py-3 text-[13px] text-slate-500">{formatDate(customer.lastVisitAt)}</td>
         <td className="px-4 py-3">
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resolveBadgeClass(customer.status)}`}>
@@ -193,6 +209,9 @@ export function CustomerCard({ customer, isSelected = false, onSelect }: Custome
         <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] text-slate-500">
           <span>بازاریاب: {customer.marketer ?? "نامشخص"}</span>
           <span>شهر: {customer.city ?? "-"}</span>
+          {customer.distance !== undefined && (
+            <span className="font-medium text-primary-600">فاصله: {formatDistance(customer.distance)}</span>
+          )}
           <span>آخرین ویزیت: {formatDate(customer.lastVisitAt)}</span>
           <span>درآمد ماهانه: {formatRevenue(customer.monthlyRevenue)}</span>
         </div>

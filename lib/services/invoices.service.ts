@@ -48,6 +48,17 @@ const invoiceLineItemSchema = z.object({
   discount: z.coerce.number().min(0).optional(),
 });
 
+const paymentInfoSchema = z.object({
+  method: z.enum(["CASH", "CHECK", "TRANSFER"]),
+  checkAmount: z.coerce.number().optional(),
+  checkDate: z.coerce.date().optional(),
+  checkOwner: z.string().optional(),
+  checkNumber: z.string().optional(),
+  status: z.enum(["PENDING", "SETTLED", "BOUNCED"]).default("PENDING"),
+  transferReference: z.string().optional(),
+  cashAmount: z.coerce.number().optional(),
+}).optional();
+
 const createInvoiceSchema = z.object({
   customerId: z.string().min(1, "مشتری الزامی است"),
   marketerId: z.string().optional(),
@@ -57,6 +68,7 @@ const createInvoiceSchema = z.object({
   currency: z.enum(["IRR", "USD"]).default("IRR"),
   items: z.array(invoiceLineItemSchema).min(1, "حداقل یک آیتم لازم است"),
   paymentReference: z.string().optional(),
+  paymentInfo: paymentInfoSchema,
   meta: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -70,6 +82,7 @@ const updateInvoiceSchema = z
     currency: z.enum(["IRR", "USD"]).optional(),
     items: z.array(invoiceLineItemSchema).optional(),
     paymentReference: z.string().optional().nullable(),
+    paymentInfo: paymentInfoSchema,
     meta: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
@@ -445,6 +458,17 @@ export async function updateInvoice(invoiceId: string, payload: unknown): Promis
     updateData.paymentReference = validated.paymentReference || undefined;
   }
 
+  if (validated.paymentInfo !== undefined) {
+    if (validated.paymentInfo) {
+      updateData.paymentInfo = {
+        ...validated.paymentInfo,
+        status: validated.paymentInfo.status ?? "PENDING",
+      } as typeof validated.paymentInfo & { status: "PENDING" | "SETTLED" | "BOUNCED" };
+    } else {
+      updateData.paymentInfo = undefined;
+    }
+  }
+
   if (validated.meta !== undefined) {
     updateData.meta = { ...existing.meta, ...validated.meta };
   }
@@ -470,6 +494,16 @@ export async function changeInvoiceStatus(
   status: InvoiceStatus,
   paidAt?: Date,
   paymentReference?: string,
+  paymentInfo?: {
+    method: "CASH" | "CHECK" | "TRANSFER";
+    checkAmount?: number;
+    checkDate?: Date;
+    checkOwner?: string;
+    checkNumber?: string;
+    status?: "PENDING" | "SETTLED" | "BOUNCED";
+    transferReference?: string;
+    cashAmount?: number;
+  },
 ): Promise<Invoice> {
   const updateData: Partial<Invoice> = {
     status,
@@ -483,9 +517,16 @@ export async function changeInvoiceStatus(
     if (paymentReference !== undefined) {
       updateData.paymentReference = paymentReference || undefined;
     }
+    if (paymentInfo) {
+      updateData.paymentInfo = {
+        ...paymentInfo,
+        status: paymentInfo.status ?? "PENDING",
+      } as typeof paymentInfo & { status: "PENDING" | "SETTLED" | "BOUNCED" };
+    }
   } else {
-    // برای وضعیت‌های غیر از PAID، paidAt را پاک می‌کنیم
+    // برای وضعیت‌های غیر از PAID، paidAt و paymentInfo را پاک می‌کنیم
     updateData.paidAt = undefined;
+    updateData.paymentInfo = undefined;
   }
 
   const updated = await invoicesRepository.updateById(invoiceId, updateData);

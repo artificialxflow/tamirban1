@@ -115,7 +115,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                     <td className="px-6 py-4 font-semibold text-slate-800">{invoice.customerName}</td>
             <td className="px-6 py-4 text-sm text-slate-600">{invoice.marketerName || "-"}</td>
             <td className="px-6 py-4 text-xs font-semibold text-slate-800">
-              {formatAmount(invoice.grandTotal)} {invoice.currency === "IRR" ? "ریال" : "دلار"}
+              {formatAmount(invoice.grandTotal)} {invoice.currency === "IRR" ? "تومان" : "دلار"}
             </td>
             <td className="px-6 py-4">
               <span
@@ -132,7 +132,8 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleDownloadPDF(invoice.id)}
-                  className="rounded-full border-2 border-primary-300 bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md"
+                  className="rounded-full border-2 border-primary-300 bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-800 transition hover:border-primary-400 hover:bg-primary-200 hover:text-primary-900 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="دانلود PDF"
                 >
                   PDF
                 </button>

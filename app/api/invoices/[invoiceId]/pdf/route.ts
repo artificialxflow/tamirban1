@@ -54,14 +54,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // نام فایل با استفاده از شماره پیش‌فاکتور
     const invoiceNumber = (invoice.meta?.invoiceNumber as string) || invoiceId;
-    const filename = `invoice-${invoiceNumber}.pdf`;
+    // استفاده از encodeURIComponent برای پشتیبانی از کاراکترهای خاص در نام فایل
+    const safeFilename = encodeURIComponent(`invoice-${invoiceNumber}.pdf`);
 
     // برگرداندن PDF به عنوان Response
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
         "Content-Length": pdfBuffer.length.toString(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
       },
     });
   } catch (error) {

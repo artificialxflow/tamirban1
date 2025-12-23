@@ -2,10 +2,14 @@ import type { Collection } from "mongodb";
 import { getMongoDb } from "./client";
 import type {
   Customer,
+  CustomerInteraction,
   Invoice,
   MarketerProfile,
   OTPAttempt,
+  Product,
   SMSLog,
+  Story,
+  Task,
   User,
   Visit,
 } from "../types";
@@ -17,8 +21,13 @@ const COLLECTIONS = {
   customers: "customers",
   visits: "visits",
   invoices: "invoices",
+  products: "products",
+  tasks: "tasks",
   smsLogs: "sms_logs",
   otpAttempts: "otp_attempts",
+  interactions: "customer_interactions",
+  stories: "stories",
+  contactMessages: "contact_messages",
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;
@@ -58,6 +67,31 @@ export async function getSmsLogsCollection(): Promise<Collection<SMSLog>> {
 export async function getOtpAttemptsCollection(): Promise<Collection<OTPAttempt>> {
   const db = await getMongoDb();
   return db.collection<OTPAttempt>(COLLECTIONS.otpAttempts);
+}
+
+export async function getInteractionsCollection(): Promise<Collection<CustomerInteraction>> {
+  const db = await getMongoDb();
+  return db.collection<CustomerInteraction>(COLLECTIONS.interactions);
+}
+
+export async function getProductsCollection(): Promise<Collection<Product>> {
+  const db = await getMongoDb();
+  return db.collection<Product>(COLLECTIONS.products);
+}
+
+export async function getTasksCollection(): Promise<Collection<Task>> {
+  const db = await getMongoDb();
+  return db.collection<Task>(COLLECTIONS.tasks);
+}
+
+export async function getStoriesCollection(): Promise<Collection<Story>> {
+  const db = await getMongoDb();
+  return db.collection<Story>(COLLECTIONS.stories);
+}
+
+export async function getContactMessagesCollection(): Promise<Collection<any>> {
+  const db = await getMongoDb();
+  return db.collection(COLLECTIONS.contactMessages);
 }
 
 export function getUsersCollectionFromDb(db: Db) {

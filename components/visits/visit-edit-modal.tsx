@@ -154,8 +154,8 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
   const scheduledAtString = scheduledAtDate.toISOString().slice(0, 16);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-3xl rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-2 sm:p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -192,6 +192,7 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
             <input type="hidden" name="visitId" value={visit.id} />
             <input type="hidden" name="locationLatitude" value={selectedLocation?.latitude ?? ""} />
             <input type="hidden" name="locationLongitude" value={selectedLocation?.longitude ?? ""} />
+            <input type="hidden" name="locationAddress" value={locationAddress} />
             
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               مشتری <span className="text-rose-500">*</span>
@@ -224,7 +225,23 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
                 markers={selectedMarkers}
                 interactive
                 center={selectedLocation ?? undefined}
-                onLocationSelect={(coords) => setSelectedLocation(coords)}
+                onLocationSelect={async (coords) => {
+                  setSelectedLocation(coords);
+                  // Reverse Geocoding برای دریافت آدرس
+                  try {
+                    const response = await fetch(
+                      `/api/geocoding/reverse?lat=${coords.latitude}&lng=${coords.longitude}`,
+                    );
+                    if (response.ok) {
+                      const data = await response.json();
+                      if (data.success && data.data?.formattedAddress) {
+                        setLocationAddress(data.data.formattedAddress);
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Error in reverse geocoding:", error);
+                  }
+                }}
               />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="flex flex-col gap-1">
@@ -332,6 +349,14 @@ export function VisitEditModal({ visit, isOpen, onClose, onSuccess }: VisitEditM
                 defaultValue={visit.followUpAction || ""}
                 placeholder="مثال: ارسال کاتالوگ، تماس تلفنی، ارسال پیش‌فاکتور"
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+              />
+            </label>
+
+            <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
+              تاریخ جلسه بعدی (اختیاری)
+              <PersianDateTimePicker
+                name="nextMeetingAt"
+                defaultValue={visit.nextMeetingAt ? new Date(visit.nextMeetingAt).toISOString().slice(0, 16) : ""}
               />
             </label>
 

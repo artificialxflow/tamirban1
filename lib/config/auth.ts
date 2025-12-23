@@ -5,7 +5,6 @@ const toNumber = (value: string | undefined, fallback: number): number => {
 
 export const authConfig = {
   otp: {
-    testCode: process.env.OTP_TEST_CODE ?? "0000",
     expirationMinutes: toNumber(process.env.OTP_EXPIRATION_MINUTES, 5),
     maxAttempts: toNumber(process.env.OTP_MAX_ATTEMPTS, 5),
     bcryptSaltRounds: toNumber(process.env.BCRYPT_SALT_ROUNDS, 10),

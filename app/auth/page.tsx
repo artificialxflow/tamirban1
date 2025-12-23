@@ -144,10 +144,10 @@ export default function AuthPreviewPage() {
         <header className="flex flex-col items-center gap-3 text-center text-white">
           <h1 className="text-4xl font-semibold md:text-5xl">ورود با شماره موبایل</h1>
           <p className="max-w-2xl text-base leading-8 text-slate-200">
-            این صفحه برای تایید ساختار احراز هویت تعمیربان طراحی شده است. حالت دریافت کد و ورود کد را می‌توانید همزمان مشاهده کنید. این نسخه اکنون به سرویس OTP متصل شده است.
+            این صفحه برای تایید ساختار احراز هویت سام‌تعمیر طراحی شده است. حالت دریافت کد و ورود کد را می‌توانید همزمان مشاهده کنید. این نسخه اکنون به سرویس OTP متصل شده است.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
-            <span className="rounded-full border border-white/20 px-4 py-2">حالت تست: OTP ثابت 0000</span>
+            <span className="rounded-full border border-white/20 px-4 py-2">کد OTP از طریق SMS ارسال می‌شود</span>
             <span className="rounded-full border border-white/20 px-4 py-2">اعتبار کد: ۵ دقیقه</span>
             <span className="rounded-full border border-white/20 px-4 py-2">محدودیت تلاش: ۵ بار</span>
           </div>

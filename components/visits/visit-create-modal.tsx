@@ -37,9 +37,10 @@ interface VisitCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialCustomerId?: string;
 }
 
-export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModalProps) {
+export function VisitCreateModal({ isOpen, onClose, onSuccess, initialCustomerId }: VisitCreateModalProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useActionState(createVisitAction, createVisitDefaultState);
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
@@ -54,7 +55,7 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   useEffect(() => {
     if (isOpen) {
       // Reset states when modal opens
-      setSelectedCustomerId("");
+      setSelectedCustomerId(initialCustomerId || "");
       setSelectedMarketerId("");
       setSelectedLocation(null);
       setLocationAddress("");
@@ -163,7 +164,7 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
           setLoading(false);
         });
     }
-  }, [isOpen]);
+  }, [isOpen, initialCustomerId]);
 
   useEffect(() => {
     if (!state.success || !isOpen) {
@@ -218,8 +219,8 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
   const defaultDateTimeString = defaultDateTime.toISOString().slice(0, 16);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-3xl rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-2 sm:p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute left-6 top-6 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -287,7 +288,23 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
                 markers={selectedMarkers}
                 interactive
                 center={selectedLocation ?? undefined}
-                onLocationSelect={(coords) => setSelectedLocation(coords)}
+                onLocationSelect={async (coords) => {
+                  setSelectedLocation(coords);
+                  // Reverse Geocoding برای دریافت آدرس
+                  try {
+                    const response = await fetch(
+                      `/api/geocoding/reverse?lat=${coords.latitude}&lng=${coords.longitude}`,
+                    );
+                    if (response.ok) {
+                      const data = await response.json();
+                      if (data.success && data.data?.formattedAddress) {
+                        setLocationAddress(data.data.formattedAddress);
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Error in reverse geocoding:", error);
+                  }
+                }}
               />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="flex flex-col gap-1">
@@ -368,6 +385,18 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
               />
             </label>
 
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+              نوع ویزیت
+              <select
+                name="visitType"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+              >
+                <option value="">انتخاب کنید</option>
+                <option value="IN_PERSON">حضوری</option>
+                <option value="PHONE">تلفنی</option>
+              </select>
+            </label>
+
             <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
               موضوعات (با کاما جدا کنید)
               <input
@@ -393,6 +422,14 @@ export function VisitCreateModal({ isOpen, onClose, onSuccess }: VisitCreateModa
                 name="followUpAction"
                 placeholder="مثال: ارسال کاتالوگ، تماس تلفنی، ارسال پیش‌فاکتور"
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+              />
+            </label>
+
+            <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-slate-700">
+              تاریخ جلسه بعدی (اختیاری)
+              <PersianDateTimePicker
+                key={`next-meeting-${modalKey}`}
+                name="nextMeetingAt"
               />
             </label>
 

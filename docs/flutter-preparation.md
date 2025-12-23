@@ -96,7 +96,7 @@ TamirBan API/
   "authToken": "",
   "refreshToken": "",
   "testPhone": "09123456789",
-  "testOtpCode": "0000"
+"testOtpCode": "<OTP_FROM_SMS>"
 }
 ```
 

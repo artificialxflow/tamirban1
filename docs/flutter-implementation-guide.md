@@ -35,7 +35,6 @@ NEXT_PUBLIC_SITE_URL=https://tamirban1.ir
 # ============================================
 # احراز هویت OTP
 # ============================================
-OTP_TEST_CODE=0000
 OTP_EXPIRATION_MINUTES=5
 OTP_MAX_ATTEMPTS=5
 JWT_SECRET=ey-name-to-behtarin-saraghaz-ey-name-to-behtarin-saraghaz
@@ -653,8 +652,8 @@ String? accessToken = await storage.read(key: 'accessToken');
 
 ### 4. تست
 
-- در حالت Development، می‌توانید از کد تست `0000` استفاده کنید
-- برای تست SMS واقعی، باید `TABAN_SMS_API_KEY` تنظیم شده باشد
+- در حالت Development و Production، همیشه باید از کدی که به صورت OTP به شماره موبایل شما پیامک می‌شود استفاده کنید.
+- برای تست SMS واقعی، باید `TABAN_SMS_API_KEY` تنظیم شده باشد.
 
 ### 5. Neshan Map
 

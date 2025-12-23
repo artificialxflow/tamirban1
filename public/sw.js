@@ -2,7 +2,7 @@
 // Service Worker برای PWA
 // این فایل باید در public/sw.js قرار گیرد
 
-const CACHE_NAME = 'tamirban-v1';
+const CACHE_NAME = 'samtamir-v1';
 const OFFLINE_PAGE = '/offline.html';
 
 // فایل‌های استاتیک که باید cache شوند

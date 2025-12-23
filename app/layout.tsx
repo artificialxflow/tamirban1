@@ -4,15 +4,15 @@ import { PWAInstaller } from "@/components/pwa/pwa-installer";
 import { PWAHead } from "@/components/pwa/pwa-head";
 
 export const metadata: Metadata = {
-  title: "تعمیربان | پلتفرم مدیریت شبکه تعمیرگاه‌ها",
+  title: "سام‌تعمیر | پلتفرم مدیریت شبکه تعمیرگاه‌ها",
   description:
-    "سیستم مدیریت ارتباط با مشتری و شبکه تعمیرگاه‌های تعمیربان با تمرکز بر OTP، مدیریت نقش‌ها و داشبورد مدیریتی.",
+    "سام‌تعمیر، سیستم مدیریت ارتباط با مشتری و شبکه تعمیرگاه‌ها با تمرکز بر OTP، مدیریت نقش‌ها و داشبورد مدیریتی.",
   manifest: "/manifest.json",
   themeColor: "#3b82f6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "تعمیربان",
+    title: "سام‌تعمیر",
   },
   icons: {
     icon: [

@@ -19,7 +19,9 @@ export interface GeoLocation {
 }
 
 export interface ContactInfo {
-  phone: string;
+  phone?: string; // برای backward compatibility - استفاده از primaryPhone یا phones[0]
+  phones?: string[]; // لیست شماره‌های تلفن
+  primaryPhone?: string; // شماره اصلی (اولین شماره در phones یا phone قدیمی)
   email?: string;
   telegramId?: string;
   whatsappNumber?: string;
@@ -64,6 +66,20 @@ export const CUSTOMER_STATUSES = [
 
 export type CustomerStatus = (typeof CUSTOMER_STATUSES)[number];
 
+export const CUSTOMER_TAGS = [
+  "مکانیک",
+  "برق کار",
+  "تنظیم موتور",
+  "جلوبندی ساز",
+  "آپاراتی",
+  "تعویض روغن",
+  "کارواش",
+  "صافکار",
+  "کلیدساز",
+] as const;
+
+export type CustomerTag = (typeof CUSTOMER_TAGS)[number];
+
 export interface Customer extends AuditTrail {
   _id: string;
   code: string;
@@ -97,6 +113,8 @@ export interface Product extends AuditTrail {
 
 export type VisitStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
+export type VisitType = "IN_PERSON" | "PHONE";
+
 export interface Visit extends AuditTrail {
   _id: string;
   customerId: string;
@@ -104,10 +122,13 @@ export interface Visit extends AuditTrail {
   scheduledAt: Date;
   completedAt?: Date;
   status: VisitStatus;
+  visitType?: VisitType; // نوع ویزیت: حضوری یا تلفنی
   topics: string[];
   notes?: string;
   locationSnapshot?: GeoLocation;
   followUpAction?: string;
+  nextMeetingAt?: Date; // تاریخ جلسه بعدی
+  relatedInvoiceIds?: string[]; // لیست شناسه‌های پیش‌فاکتورهای مرتبط
 }
 
 export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
@@ -121,6 +142,17 @@ export interface InvoiceLineItem {
   taxRate?: number;
   discount?: number;
   total: number;
+}
+
+export interface PaymentInfo {
+  method: "CASH" | "CHECK" | "TRANSFER";
+  checkAmount?: number;
+  checkDate?: Date;
+  checkOwner?: string;
+  checkNumber?: string;
+  status: "PENDING" | "SETTLED" | "BOUNCED";
+  transferReference?: string; // برای پرداخت بانکی
+  cashAmount?: number; // برای پرداخت نقدی
 }
 
 export interface Invoice extends AuditTrail {
@@ -138,10 +170,43 @@ export interface Invoice extends AuditTrail {
   grandTotal: number;
   paymentReference?: string;
   paidAt?: Date;
+  paymentInfo?: PaymentInfo; // اطلاعات پرداخت (چک، نقدی، انتقال)
   meta?: Record<string, unknown>;
 }
 
 export type SMSStatus = "QUEUED" | "DELIVERED" | "FAILED";
+
+export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
+
+export interface Task extends AuditTrail {
+  _id: string;
+  title: string;
+  description?: string;
+  assignedTo: string; // userId
+  assignedBy: string; // userId
+  status: TaskStatus;
+  dueAt?: Date;
+  priority: TaskPriority;
+  completedAt?: Date;
+  relatedCustomerId?: string;
+  relatedVisitId?: string;
+  relatedInvoiceId?: string;
+}
+
+export type InteractionType = "CALL" | "VISIT" | "SMS" | "EMAIL" | "NOTE";
+
+export interface CustomerInteraction extends AuditTrail {
+  _id: string;
+  customerId: string;
+  marketerId?: string; // بازاریابی که این ارتباط را انجام داده
+  type: InteractionType;
+  description?: string;
+  duration?: number; // برای تماس (به ثانیه)
+  relatedVisitId?: string; // اگر از نوع VISIT باشد
+  relatedInvoiceId?: string; // اگر مرتبط با پیش‌فاکتور باشد
+  createdAt: Date;
+}
 
 export interface SMSLog extends AuditTrail {
   _id: string;
@@ -192,5 +257,16 @@ export interface PaginatedResult<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface Story extends AuditTrail {
+  _id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  createdBy: string; // userId
+  expiresAt: Date;
+  isActive: boolean;
 }
 

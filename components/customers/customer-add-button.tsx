@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { ProtectedComponent } from "@/components/common/protected-component";
 import { CustomerCreateModal } from "@/components/customers/customer-create-modal";
+import { VisitCreateModal } from "@/components/visits/visit-create-modal";
 
 interface CustomerAddButtonProps {
   onClick?: () => void;
@@ -13,15 +14,27 @@ interface CustomerAddButtonProps {
  * دکمه افزودن مشتری جدید با RBAC
  */
 export function CustomerAddButton({ onClick }: CustomerAddButtonProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
+  const [newCustomerId, setNewCustomerId] = useState<string | null>(null);
 
   const handleOpen = () => {
     onClick?.();
-    setIsModalOpen(true);
+    setIsCustomerModalOpen(true);
   };
 
   const handleClose = () => {
-    setIsModalOpen(false);
+    setIsCustomerModalOpen(false);
+  };
+
+  const handleCreateVisit = (customerId: string) => {
+    setNewCustomerId(customerId);
+    setIsVisitModalOpen(true);
+  };
+
+  const handleVisitClose = () => {
+    setIsVisitModalOpen(false);
+    setNewCustomerId(null);
   };
 
   return (
@@ -34,7 +47,16 @@ export function CustomerAddButton({ onClick }: CustomerAddButtonProps) {
         >
           افزودن مشتری جدید
         </button>
-        <CustomerCreateModal isOpen={isModalOpen} onClose={handleClose} />
+        <CustomerCreateModal 
+          isOpen={isCustomerModalOpen} 
+          onClose={handleClose}
+          onCreateVisit={handleCreateVisit}
+        />
+        <VisitCreateModal
+          isOpen={isVisitModalOpen}
+          onClose={handleVisitClose}
+          initialCustomerId={newCustomerId || undefined}
+        />
       </>
     </ProtectedComponent>
   );

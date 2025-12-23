@@ -7,6 +7,7 @@ type VisitsPageProps = {
     customerId?: string;
     marketerId?: string;
     status?: string;
+    visitType?: string;
     startDate?: string;
     endDate?: string;
     page?: string;
@@ -24,6 +25,7 @@ export default async function VisitsPage({ searchParams }: VisitsPageProps) {
       customerId: params.customerId,
       marketerId: params.marketerId,
       status: params.status as VisitStatus | undefined,
+      visitType: params.visitType as "IN_PERSON" | "PHONE" | undefined,
       startDate: params.startDate ? new Date(params.startDate) : undefined,
       endDate: params.endDate ? new Date(params.endDate) : undefined,
       page,

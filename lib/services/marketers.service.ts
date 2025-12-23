@@ -200,6 +200,17 @@ export async function updateMarketer(marketerId: string, input: unknown, current
     throw new Error("کاربر یافت نشد.");
   }
 
+  // بررسی دسترسی برای تغییر نقش - فقط SUPER_ADMIN می‌تواند نقش را تغییر دهد
+  if (payload.role !== undefined && payload.role !== user.role) {
+    if (!currentUserId) {
+      throw new Error("برای تغییر نقش، باید وارد سیستم باشید.");
+    }
+    const currentUser = await usersRepository.findById(currentUserId);
+    if (!currentUser || currentUser.role !== "SUPER_ADMIN") {
+      throw new Error("فقط مدیر کل می‌تواند نقش کاربران را تغییر دهد.");
+    }
+  }
+
   // بررسی محدودسازی دسترسی ادمین اصلی
   // اگر کاربر در حال ویرایش خودش است و SUPER_ADMIN است، نباید بتواند نقش یا وضعیت خود را تغییر دهد
   if (currentUserId && marketerId === currentUserId && user.role === "SUPER_ADMIN") {

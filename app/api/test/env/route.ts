@@ -18,7 +18,6 @@ export async function GET() {
       tabanBaseUrl: process.env.TABAN_SMS_BASE_URL,
       tabanSenderNumber: process.env.TABAN_SMS_SENDER_NUMBER,
       tabanApiKeyLength: process.env.TABAN_SMS_API_KEY?.length || 0,
-      otpTestCode: process.env.OTP_TEST_CODE,
     },
   });
 }

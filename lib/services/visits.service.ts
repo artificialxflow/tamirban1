@@ -271,9 +271,11 @@ export async function getVisitsOverview(currentUserId?: string): Promise<VisitsO
 
 // Schemas
 const createVisitSchema = z.object({
+  nextMeetingAt: z.coerce.date().optional(),
   customerId: z.string().min(1, "شناسه مشتری الزامی است"),
   marketerId: z.string().min(1, "شناسه بازاریاب الزامی است"),
   scheduledAt: z.coerce.date({ message: "تاریخ و زمان ویزیت الزامی است" }),
+  visitType: z.enum(["IN_PERSON", "PHONE"]).optional(),
   topics: z.array(z.string()).default([]),
   notes: z.string().optional(),
   locationSnapshot: z
@@ -284,6 +286,7 @@ const createVisitSchema = z.object({
     })
     .optional(),
   followUpAction: z.string().optional(),
+  relatedInvoiceIds: z.array(z.string()).optional(),
 });
 
 const updateVisitSchema = createVisitSchema.partial();
@@ -297,6 +300,7 @@ export type VisitListFilters = {
   customerId?: string;
   marketerId?: string;
   status?: VisitStatus;
+  visitType?: "IN_PERSON" | "PHONE";
   startDate?: Date;
   endDate?: Date;
   page?: number;
@@ -312,9 +316,12 @@ export type VisitSummary = {
   scheduledAt: Date;
   completedAt?: Date | null;
   status: VisitStatus;
+  visitType?: "IN_PERSON" | "PHONE";
   topics: string[];
   notes?: string;
   followUpAction?: string;
+  nextMeetingAt?: Date | null;
+  relatedInvoiceIds?: string[];
   locationSnapshot?: {
     latitude: number;
     longitude: number;
@@ -394,9 +401,11 @@ export async function listVisits(
     scheduledAt: visit.scheduledAt,
     completedAt: visit.completedAt ?? null,
     status: visit.status,
+    visitType: visit.visitType,
     topics: visit.topics ?? [],
     notes: visit.notes,
     followUpAction: visit.followUpAction,
+    nextMeetingAt: visit.nextMeetingAt ?? null,
     locationSnapshot: visit.locationSnapshot
       ? {
           latitude: visit.locationSnapshot.latitude,
@@ -434,9 +443,11 @@ export async function getVisitDetail(visitId: string): Promise<VisitDetail | nul
     scheduledAt: visit.scheduledAt,
     completedAt: visit.completedAt ?? null,
     status: visit.status,
+    visitType: visit.visitType,
     topics: visit.topics ?? [],
     notes: visit.notes,
     followUpAction: visit.followUpAction,
+    nextMeetingAt: visit.nextMeetingAt ?? null,
     locationSnapshot: visit.locationSnapshot
       ? {
           latitude: visit.locationSnapshot.latitude,
@@ -469,10 +480,12 @@ export async function createVisit(input: unknown) {
     marketerId: payload.marketerId,
     scheduledAt: payload.scheduledAt,
     status: "SCHEDULED",
+    visitType: payload.visitType,
     topics: payload.topics ?? [],
     notes: payload.notes,
     locationSnapshot: payload.locationSnapshot,
     followUpAction: payload.followUpAction,
+    nextMeetingAt: payload.nextMeetingAt,
     createdAt: now,
     createdBy: "system",
     updatedAt: now,
@@ -489,6 +502,20 @@ export async function createVisit(input: unknown) {
       updatedBy: "system",
     },
   } as never);
+
+  // ثبت خودکار interaction برای ویزیت
+  try {
+    const { createVisitInteraction } = await import("@/lib/services/interactions.service");
+    await createVisitInteraction(
+      document._id,
+      payload.customerId,
+      payload.marketerId,
+      payload.notes || `ویزیت ${payload.visitType === "PHONE" ? "تلفنی" : "حضوری"} انجام شد`,
+    );
+  } catch (error) {
+    // اگر ثبت interaction با خطا مواجه شد، ویزیت را همچنان برگردان
+    console.error("Error creating visit interaction:", error);
+  }
 
   return getVisitDetail(document._id);
 }

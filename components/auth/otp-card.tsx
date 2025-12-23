@@ -104,7 +104,7 @@ export function OTPCard({
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-3 text-sm font-semibold text-primary-600">
           <span className="inline-flex h-2 w-2 rounded-full bg-primary-500" />
-          ورود به تعمیربان
+          ورود به سام‌تعمیر
         </div>
         <h1 className="text-2xl font-semibold text-slate-800">
           {isRequest ? "کد تایید را دریافت کنید" : "کد ارسال‌شده را وارد کنید"}
@@ -206,7 +206,7 @@ export function OTPCard({
       <footer className="flex flex-col gap-2 text-xs text-slate-500">
         {isRequest ? (
           <span>
-            با ورود به سیستم، شرایط و قوانین تعمیربان را می‌پذیرم. کد ارسال‌شده تنها ۵ دقیقه اعتبار دارد.
+            با ورود به سیستم، شرایط و قوانین سام‌تعمیر را می‌پذیرم. کد ارسال‌شده تنها ۵ دقیقه اعتبار دارد.
           </span>
         ) : (
           <span>در صورت بروز مشکل با واحد پشتیبانی تماس بگیرید: ۰۲۱-۱۲۳۴۵۶۷۸</span>
