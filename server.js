@@ -7,6 +7,12 @@ const hostname = "0.0.0.0";
 const dev = process.env.NODE_ENV !== "production";
 
 // #region agent log:server-env
+console.log("🔍 [DEBUG] Server Environment Variables:");
+console.log(`   PORT: ${process.env.PORT || "undefined (using default 8729)"}`);
+console.log(`   NODE_ENV: ${process.env.NODE_ENV || "undefined (using default development)"}`);
+console.log(`   Resolved port: ${port}`);
+console.log(`   Resolved dev: ${dev}`);
+console.log(`   Process cwd: ${process.cwd()}`);
 fetch("http://127.0.0.1:7252/ingest/7549b5eb-a34c-443b-885c-874f6bff68a8", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -21,6 +27,8 @@ fetch("http://127.0.0.1:7252/ingest/7549b5eb-a34c-443b-885c-874f6bff68a8", {
       hostname,
       nodeEnv: process.env.NODE_ENV || null,
       dev,
+      processCwd: process.cwd(),
+      envPort: process.env.PORT || null,
     },
     timestamp: Date.now(),
   }),

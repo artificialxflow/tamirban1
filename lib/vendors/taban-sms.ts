@@ -274,19 +274,34 @@ export async function sendOtpSms(phone: string, code: string): Promise<TabaanSms
     // نام متغیر Pattern را از متغیر محیطی می‌خوانیم (پیش‌فرض: "verification-code")
     // اگر در پنل تابان متغیر دیگری است، باید TABAN_SMS_PATTERN_VAR را تنظیم کنید
     const patternVarName = process.env.TABAN_SMS_PATTERN_VAR || "verification-code";
-    
+
+    // برای جلوگیری از خطاهایی مثل «تکمیل گزینه params.OTP الزامی است»
+    // همیشه کلید OTP را هم در params ست می‌کنیم، علاوه بر متغیر اصلی
+    const patternValues: Record<string, string> = {
+      [patternVarName]: code,
+    };
+
+    // اطمینان از وجود کلید OTP (برای Patternهایی که نام متغیرشان OTP است)
+    if (patternVarName !== "OTP") {
+      patternValues.OTP = code;
+    }
+
+    // برای سازگاری عقب‌رو، اگر نام دیگری است، کلید پیش‌فرض "verification-code" را هم ست می‌کنیم
+    if (patternVarName !== "verification-code") {
+      patternValues["verification-code"] = code;
+    }
+
     console.log("[Tabaan SMS] استفاده از Pattern:", {
       patternCode,
       patternVarName,
       code,
+      patternValues,
     });
-    
+
     return sendSms({
       phone,
       patternCode,
-      patternValues: {
-        [patternVarName]: code, // متغیر Pattern - باید با نام متغیر در پنل تابان مطابقت داشته باشد
-      },
+      patternValues,
     });
   } else {
     // Fallback به روش قدیمی (متن مستقیم)

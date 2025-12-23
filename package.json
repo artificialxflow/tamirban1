@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "//start:next": "next start",
-    "start": "NODE_ENV=production PORT=8729 node server.js",
+    "start": "node server.js",
     "start:server": "node server.js",
     "lint": "eslint . --ext ts,tsx",
     "lint:fix": "eslint . --ext ts,tsx --fix",

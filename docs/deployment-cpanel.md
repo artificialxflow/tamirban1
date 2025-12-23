@@ -26,21 +26,30 @@
    این دستور پوشه `.next` را برای اجرای production آماده می‌کند.
 
 4. **اجرای سرور سفارشی**
-   - اسکریپت `start:server` به صورت زیر تعریف شده است:
+   - اسکریپت `start` در `package.json` به صورت زیر تعریف شده است:
      ```bash
-     npm run start:server
+     npm start
      ```
    - این دستور فایل `server.js` را اجرا می‌کند که Next.js را روی پورت `8729` بالا می‌آورد.
+   - **مهم**: Environment variables (`NODE_ENV`, `PORT`, و غیره) باید در cPanel Node.js Application Manager تنظیم شوند، نه در `package.json`.
    - برای اجرای دائمی می‌توانید از Application Manager سی‌پنل یا ابزارهایی مثل `pm2` استفاده کنید:
      ```bash
      pm2 start server.js --name tamirban --env production
      ```
 
-5. **پیکربندی پورت و دامنه**
+5. **پیکربندی پورت و دامنه در cPanel**
    - در سی‌پنل (Application Manager)، اپلیکیشن Node.js را ایجاد کرده و مسیر اجرای آن را روی پروژه تنظیم کنید.
+   - **Startup File**: `server.js` را تنظیم کنید.
+   - **Environment Variables**: تمام متغیرهای محیطی را در cPanel اضافه کنید (مطابق `env.example`).
+     - `NODE_ENV=production`
+     - `PORT=8729`
+     - `NEXT_PUBLIC_SITE_URL=https://samtamir.ir`
+     - و سایر متغیرها (مطابق `env.example`)
    - پورت 8729 را در بخش تنظیمات برنامه وارد کنید.
    - دامنه یا زیر دامنه اصلی (`samtamir.ir`) را به اپلیکیشن متصل نمایید (با استفاده از مسیریابی داخلی هاست یا ابزار Reverse Proxy).
    - پس از اتصال دامنه، صحت SSL را بررسی و در صورت نیاز فعال کنید.
+   
+   > **راهنمای کامل تنظیمات cPanel**: برای جزئیات بیشتر و عیب‌یابی مشکل 503، به [`docs/cpanel-setup-guide.md`](./cpanel-setup-guide.md) مراجعه کنید.
 
 6. **اتومات‌سازی اجرا پس از ریبوت**
    - در صورت عدم استفاده از Application Manager، یک cron job با دستور `@reboot` بنویسید تا پس از راه‌اندازی مجدد سرور، `pm2` یا `npm run start:server` اجرا شود.
@@ -48,7 +57,8 @@
 ## نکات تکمیلی
 - برای جلوگیری از قطع سرویس هنگام به‌روزرسانی، ابتدا `npm run build` را اجرا کنید، سپس سرویس را ری‌استارت کنید.
 - لاگ‌های خروجی `server.js` در کنسول نمایش داده می‌شوند؛ برای لاگ دائمی از `pm2 logs tamirban` یا ابزارهای مشابه استفاده کنید.
-- در صورت تغییر پورت یا دامنه، متغیرهای محیطی `PORT` و `NEXT_PUBLIC_SITE_URL` را به‌روزرسانی کنید.
+- در صورت تغییر پورت یا دامنه، متغیرهای محیطی `PORT` و `NEXT_PUBLIC_SITE_URL` را در cPanel به‌روزرسانی کنید.
+- **مشکل 503 Service Unavailable**: اگر اپلیکیشن از طریق cPanel اجرا می‌شود ولی 503 می‌دهد، به [`docs/cpanel-setup-guide.md`](./cpanel-setup-guide.md) مراجعه کنید.
 
 > پس از هر تغییر در فرآیند استقرار یا زیرساخت، این سند را به‌روزرسانی کنید تا تیم توسعه و DevOps از آخرین وضعیت مطلع باشد.
 
