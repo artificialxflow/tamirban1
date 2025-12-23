@@ -34,6 +34,9 @@ export function PWAHead() {
     // Theme color
     addMetaTag("theme-color", "#3b82f6");
 
+    // Favicon
+    addLinkTag("icon", "/favicon.png", { type: "image/png" });
+
     // Apple Web App
     addMetaTag("apple-mobile-web-app-capable", "yes");
     addMetaTag("apple-mobile-web-app-status-bar-style", "default");

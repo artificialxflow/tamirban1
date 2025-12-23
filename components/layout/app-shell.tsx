@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 import { useAuth } from "@/lib/hooks/use-auth";
 import { usePermissions } from "@/lib/hooks/use-permissions";
@@ -98,9 +99,19 @@ export function AppShell({
   const sidebar = (
     <aside className="flex w-full flex-col gap-6 rounded-3xl border-2 border-slate-300 bg-linear-to-br from-white to-slate-50 p-6 shadow-lg lg:w-64">
       <header className="flex items-center justify-between rounded-2xl border-2 border-primary-200 bg-primary-50 p-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary-600">SamTamir CRM</span>
-          <span className="text-xl font-bold text-slate-800">سام‌تعمیر</span>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="لوگوی SamTamir CRM"
+            width={56}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary-600">SamTamir CRM</span>
+            <span className="text-xl font-bold text-slate-800">سام‌تعمیر</span>
+          </div>
         </div>
         <span
           style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
@@ -162,7 +173,9 @@ export function AppShell({
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="text-xs font-semibold text-slate-500">کاربر فعلی</p>
-                <p className="truncate text-sm font-semibold text-slate-800">{user.mobile}</p>
+                <p className="text-sm font-semibold text-slate-800 whitespace-normal break-all">
+                  {user.mobile}
+                </p>
                 <span className="inline-flex w-fit items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-[11px] font-semibold text-slate-600">
                   نقش
                   <span className="text-primary-600">{user.role}</span>

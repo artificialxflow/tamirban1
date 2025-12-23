@@ -23,14 +23,25 @@ const summaryBadges = [
 ];
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="container flex flex-1 flex-col gap-16 py-16">
       <section className="flex flex-col gap-8 rounded-2xl bg-white p-10 shadow-soft">
-        <span className="inline-flex max-w-fit items-center gap-3 rounded-full bg-primary-100 border border-primary-200 px-4 py-2 text-sm font-semibold text-primary-700">
-          سام‌تعمیر | SamTamir CRM
-        </span>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/logo.png"
+            alt="لوگوی SamTamir CRM"
+            width={120}
+            height={90}
+            className="h-16 w-auto"
+            priority
+          />
+          <span className="inline-flex max-w-fit items-center gap-3 rounded-full bg-primary-100 border border-primary-200 px-4 py-2 text-sm font-semibold text-primary-700">
+            سام‌تعمیر | SamTamir CRM
+          </span>
+        </div>
         <div className="flex flex-col gap-6">
           <h1 className="text-4xl font-semibold leading-[1.3] text-slate-800 md:text-5xl">
             کنترل کامل شبکه تعمیرگاه‌ها با سام‌تعمیر در یک پلتفرم یکپارچه و فارسی

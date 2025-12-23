@@ -1,5 +1,5 @@
 /**
- * اسکریپت تولید آیکون‌های PWA از favicon.png
+ * اسکریپت تولید آیکون‌های PWA و favicon از لوگوی اصلی (logo.png)
  * 
  * نیازمندی: npm install --save-dev sharp
  * 
@@ -11,18 +11,19 @@ const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 
-const faviconPath = path.join(process.cwd(), "public", "favicon.png");
+const sourceLogoPath = path.join(process.cwd(), "public", "logo.png");
 const iconsDir = path.join(process.cwd(), "public", "icons");
+const publicDir = path.join(process.cwd(), "public");
 
 // ایجاد پوشه icons در صورت عدم وجود
 if (!fs.existsSync(iconsDir)) {
   fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-// بررسی وجود favicon.png
-if (!fs.existsSync(faviconPath)) {
-  console.error("❌ فایل favicon.png در public/ یافت نشد!");
-  console.error("   لطفاً ابتدا یک آیکون 512x512 در public/favicon.png قرار دهید.");
+// بررسی وجود logo.png
+if (!fs.existsSync(sourceLogoPath)) {
+  console.error("❌ فایل logo.png در public/ یافت نشد!");
+  console.error("   لطفاً ابتدا لوگوی اصلی را در public/logo.png قرار دهید.");
   process.exit(1);
 }
 
@@ -38,7 +39,7 @@ async function generateIcons() {
   for (const { size, name } of sizes) {
     try {
       const outputPath = path.join(iconsDir, name);
-      await sharp(faviconPath)
+      await sharp(sourceLogoPath)
         .resize(size, size, {
           fit: "contain",
           background: { r: 255, g: 255, b: 255, alpha: 1 },
@@ -50,6 +51,21 @@ async function generateIcons() {
     } catch (error) {
       console.error(`❌ خطا در ایجاد ${name}:`, error.message);
     }
+  }
+
+  // تولید favicon.png از لوگو
+  try {
+    const faviconPath = path.join(publicDir, "favicon.png");
+    await sharp(sourceLogoPath)
+      .resize(256, 256, {
+        fit: "contain",
+        background: { r: 255, g: 255, b: 255, alpha: 1 },
+      })
+      .png()
+      .toFile(faviconPath);
+    console.log(`✅ favicon.png (256x256) ایجاد/به‌روزرسانی شد`);
+  } catch (error) {
+    console.error("❌ خطا در ایجاد favicon.png:", error.message);
   }
 
   console.log("\n✅ تمام آیکون‌ها با موفقیت ایجاد شدند!");
